@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ridefix - Professional Service App</title>
+    <title>Ridefix - Accurate Location App</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
@@ -18,19 +18,19 @@
 
     <div class="max-w-[450px] mx-auto bg-white min-h-screen pb-28 shadow-2xl relative border-x border-emerald-50">
         
-        <div class="p-5 bg-white sticky top-0 z-50">
+        <div class="p-5 bg-white sticky top-0 z-50 shadow-sm">
             <div class="flex justify-between items-start mb-4">
                 <div class="flex items-start gap-2">
                     <div class="text-emerald-600 mt-1">
                         <i data-lucide="map-pin" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">तुमचे लोकेशन</span>
-                        <p id="location-text" class="text-slate-700 text-sm font-bold truncate w-48">परवानगी मागत आहे...</p>
+                        <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">तुमचे अचूक लोकेशन</span>
+                        <p id="location-text" class="text-slate-700 text-sm font-bold truncate w-48 italic">शोधत आहे...</p>
                     </div>
                 </div>
 
-                <button class="relative p-2.5 bg-emerald-50 rounded-2xl text-emerald-700 active:scale-90 transition">
+                <button class="relative p-2.5 bg-emerald-50 rounded-2xl text-emerald-700">
                     <i data-lucide="bell" class="w-6 h-6"></i>
                     <div class="notification-badge"></div>
                 </button>
@@ -39,135 +39,117 @@
             <div class="relative">
                 <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
                 <input type="text" placeholder="गाडी सर्व्हिस किंवा दुरुस्ती शोधा..." 
-                       class="w-full bg-slate-100 py-4 pl-12 pr-4 rounded-2xl border border-transparent focus:border-emerald-500 focus:bg-white outline-none transition-all font-medium text-sm">
+                       class="w-full bg-slate-100 py-4 pl-12 pr-4 rounded-2xl border border-transparent focus:border-emerald-500 focus:bg-white outline-none font-medium text-sm">
             </div>
         </div>
 
-        <div class="px-5 mb-8">
+        <div class="px-5 mt-6 mb-8">
             <div class="relative w-full h-44 banner-gradient rounded-[2.5rem] overflow-hidden shadow-xl shadow-emerald-100">
                 <div class="absolute inset-0 p-7 flex flex-col justify-center z-10">
                     <span class="bg-white/20 text-white text-[9px] font-bold px-3 py-1 rounded-full w-max uppercase tracking-widest mb-3">
-                        Limited Time Offer
+                        Offer for you
                     </span>
                     <h2 class="text-white text-2xl font-black leading-tight">
-                        मिळवा <span class="text-yellow-400">25% सूट</span><br>
-                        फुल सर्व्हिसिंगवर
+                        मिळवा <span class="text-yellow-400">25% OFF</span><br>
+                        प्रीमियम सर्व्हिसवर
                     </h2>
-                    <p class="text-emerald-100 text-[10px] mt-3 font-medium tracking-wide">कोड: RIDEFIX25 | फक्त आजसाठी</p>
+                    <p class="text-emerald-100 text-[10px] mt-3 font-medium">पत्ता: तुमच्या जवळ | फक्त आजच</p>
                 </div>
                 <div class="absolute -right-12 -bottom-12 w-48 h-48 bg-white/10 rounded-full"></div>
-            </div>
-            <div class="flex justify-center gap-1.5 mt-4">
-                <div class="w-5 h-1.5 bg-emerald-600 rounded-full"></div>
-                <div class="w-1.5 h-1.5 bg-emerald-200 rounded-full"></div>
             </div>
         </div>
 
         <div class="px-5">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="font-extrabold text-lg text-slate-800">आमच्या सेवा</h3>
-                <span class="text-emerald-600 text-xs font-bold uppercase tracking-widest">सर्व पहा</span>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div class="bg-emerald-50/50 p-6 rounded-[2.5rem] border border-emerald-100 flex flex-col items-center text-center active:scale-95 transition-transform">
-                    <div class="bg-white p-4 rounded-2xl shadow-sm text-emerald-600 mb-4">
+            <h3 class="font-extrabold text-lg text-slate-800 mb-6">आमच्या सेवा</h3>
+            <div class="grid grid-cols-2 gap-4 text-center">
+                <div class="bg-emerald-50/50 p-6 rounded-[2.5rem] border border-emerald-100 active:scale-95 transition">
+                    <div class="bg-white p-4 rounded-2xl shadow-sm text-emerald-600 mb-3 mx-auto w-max">
                         <i data-lucide="bike" class="w-8 h-8"></i>
                     </div>
                     <span class="font-bold text-sm text-slate-700">Bike Service</span>
                 </div>
-
-                <div class="bg-emerald-50/50 p-6 rounded-[2.5rem] border border-emerald-100 flex flex-col items-center text-center active:scale-95 transition-transform">
-                    <div class="bg-white p-4 rounded-2xl shadow-sm text-emerald-600 mb-4">
+                <div class="bg-emerald-50/50 p-6 rounded-[2.5rem] border border-emerald-100 active:scale-95 transition">
+                    <div class="bg-white p-4 rounded-2xl shadow-sm text-emerald-600 mb-3 mx-auto w-max">
                         <i data-lucide="car" class="w-8 h-8"></i>
                     </div>
                     <span class="font-bold text-sm text-slate-700">Car Wash</span>
                 </div>
-
-                <div class="bg-emerald-50/50 p-6 rounded-[2.5rem] border border-emerald-100 flex flex-col items-center text-center active:scale-95 transition-transform">
-                    <div class="bg-white p-4 rounded-2xl shadow-sm text-emerald-600 mb-4">
-                        <i data-lucide="wrench" class="w-8 h-8"></i>
-                    </div>
-                    <span class="font-bold text-sm text-slate-700">Engine Fix</span>
-                </div>
-
-                <div class="bg-emerald-50/50 p-6 rounded-[2.5rem] border border-emerald-100 flex flex-col items-center text-center active:scale-95 transition-transform">
-                    <div class="bg-white p-4 rounded-2xl shadow-sm text-emerald-600 mb-4">
-                        <i data-lucide="zap" class="w-8 h-8"></i>
-                    </div>
-                    <span class="font-bold text-sm text-slate-700">Battery</span>
-                </div>
             </div>
         </div>
 
-        <div class="fixed bottom-0 left-0 right-0 max-w-[450px] mx-auto bg-white/90 backdrop-blur-xl border-t border-emerald-50 px-6 py-5 flex justify-between items-center z-50 shadow-lg">
-            
+        <div class="fixed bottom-0 left-0 right-0 max-w-[450px] mx-auto bg-white/90 backdrop-blur-xl border-t border-emerald-50 px-6 py-5 flex justify-between items-center z-50">
             <div class="flex flex-col items-center text-emerald-600">
                 <i data-lucide="home" class="w-6 h-6"></i>
-                <span class="text-[9px] font-extrabold mt-1 uppercase tracking-tighter">Home</span>
+                <span class="text-[9px] font-black mt-1 uppercase">Home</span>
             </div>
-
             <div class="flex flex-col items-center text-slate-300">
                 <i data-lucide="calendar-check" class="w-6 h-6"></i>
-                <span class="text-[9px] font-bold mt-1 uppercase tracking-tighter">Bookings</span>
+                <span class="text-[9px] font-bold mt-1 uppercase">Bookings</span>
             </div>
-
             <div class="flex flex-col items-center text-slate-300">
                 <i data-lucide="message-circle" class="w-6 h-6"></i>
-                <span class="text-[9px] font-bold mt-1 uppercase tracking-tighter">Support</span>
+                <span class="text-[9px] font-bold mt-1 uppercase">Support</span>
             </div>
-
             <div class="flex flex-col items-center text-slate-300">
                 <i data-lucide="history" class="w-6 h-6"></i>
-                <span class="text-[9px] font-bold mt-1 uppercase tracking-tighter">History</span>
+                <span class="text-[9px] font-bold mt-1 uppercase">History</span>
             </div>
-
             <div class="flex flex-col items-center text-slate-300">
-                <i data-lucide="user-round" class="w-6 h-6"></i>
-                <span class="text-[9px] font-bold mt-1 uppercase tracking-tighter">Profile</span>
+                <i data-lucide="user" class="w-6 h-6"></i>
+                <span class="text-[9px] font-bold mt-1 uppercase">Profile</span>
             </div>
-
         </div>
-
     </div>
 
     <script>
         lucide.createIcons();
 
-        function updateLocationName() {
+        function getAccurateLocation() {
             const locText = document.getElementById("location-text");
             
+            const options = {
+                enableHighAccuracy: true, // GPS वापरण्यासाठी
+                timeout: 10000,
+                maximumAge: 0
+            };
+
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
                         const lat = position.coords.latitude;
                         const lon = position.coords.longitude;
 
-                        // Reverse Geocoding API (OpenStreetMap)
-                        fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`)
+                        // Reverse Geocoding with High Zoom for Accuracy
+                        fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`)
                             .then(response => response.json())
                             .then(data => {
-                                const address = data.address;
-                                const city = address.city || address.town || address.village || address.suburb || "Unknown Area";
-                                const district = address.county || "";
-                                locText.innerText = city + (district ? ", " + district : "");
+                                const addr = data.address;
+                                // गल्ली, उपनगर किंवा गावाचे नाव शोधणे
+                                const preciseLocation = addr.road || addr.suburb || addr.neighbourhood || addr.village || addr.town || addr.city || "Area Identified";
+                                const district = addr.county || "";
+                                
+                                locText.innerText = preciseLocation + (district ? ", " + district : "");
                                 locText.classList.add("text-emerald-700");
                             })
-                            .catch(err => {
-                                locText.innerText = "Location Found (Name Error)";
+                            .catch(() => {
+                                locText.innerText = "नाव मिळाले नाही (नकाशा एरर)";
                             });
                     },
                     (error) => {
-                        locText.innerText = "Location Permission Denied";
-                        locText.classList.add("text-red-400");
-                    }
+                        locText.innerText = "परवानगी नाकारली";
+                        locText.classList.add("text-red-500");
+                    },
+                    options
                 );
             } else {
-                locText.innerText = "Not Supported";
+                locText.innerText = "GPS Not Supported";
             }
         }
 
-        window.onload = updateLocationName;
+        window.onload = () => {
+            // थोड्या उशिराने विचारल्यास ब्राऊझरला परमिशन पॉपअप दाखवणे सोपे जाते
+            setTimeout(getAccurateLocation, 1000);
+        };
     </script>
 </body>
 </html>
