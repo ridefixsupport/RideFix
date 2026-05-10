@@ -111,7 +111,7 @@
           });
       });
 
-      // --- Location Tracking Logic ---
+      // --- Updated Location Tracking Logic (Village, Taluka, State) ---
       window.updateLocation = function() {
           const locationText = document.querySelector('[data-i18n="location_finding"]');
           if (navigator.geolocation) {
@@ -120,8 +120,15 @@
                       try {
                           const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
                           const data = await res.json();
-                          const city = data.address.city || data.address.town || data.address.village || "Location Found";
-                          locationText.innerText = city;
+                          const addr = data.address;
+                          
+                          const village = addr.village || addr.suburb || addr.town || addr.city || "";
+                          const taluka = addr.county || addr.state_district || "";
+                          const state = addr.state || "Maharashtra";
+
+                          const displayAddress = `${village}${village && taluka ? ', ' : ''}${taluka}${taluka && state ? ', ' : ''}${state}`;
+                          
+                          locationText.innerText = displayAddress;
                           locationText.removeAttribute('data-i18n'); 
                       } catch (e) {
                           locationText.innerText = "Location Detected";
@@ -195,7 +202,6 @@
           }
       };
 
-      // लोड झाल्यावर लोकेशन फंक्शन चालवा
       window.addEventListener('load', updateLocation);
     </script>
 </head>
