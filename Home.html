@@ -111,7 +111,7 @@
           });
       });
 
-      // --- Updated Location Tracking Logic (Village, Taluka, State) ---
+      // --- Updated Location Logic (No 'Taluka' word, No truncate) ---
       window.updateLocation = function() {
           const locationText = document.querySelector('[data-i18n="location_finding"]');
           if (navigator.geolocation) {
@@ -126,7 +126,8 @@
                           const taluka = addr.county || addr.state_district || "";
                           const state = addr.state || "Maharashtra";
 
-                          const displayAddress = `${village}${village && taluka ? ', ' : ''}${taluka}${taluka && state ? ', ' : ''}${state}`;
+                          const addressParts = [village, taluka, state].filter(part => part !== "");
+                          const displayAddress = addressParts.join(', ');
                           
                           locationText.innerText = displayAddress;
                           locationText.removeAttribute('data-i18n'); 
@@ -211,14 +212,16 @@
         
         <div class="ios-header p-6 fixed top-0 left-0 right-0 z-[1000] max-w-[450px] mx-auto">
             <div class="flex justify-between items-center mb-6">
-                <div class="flex flex-col">
+                <div class="flex flex-col flex-1">
                     <h1 class="text-3xl logo-font header-text leading-none mb-1.5">Ride<span class="text-emerald-500">Fix</span></h1>
-                    <div class="flex items-center gap-1.5">
-                        <div class="flex items-center justify-center bg-emerald-500 p-1 rounded-md shadow-sm">
+                    <div class="flex items-start gap-1.5">
+                        <div class="flex items-center justify-center bg-emerald-500 p-1 rounded-md shadow-sm mt-0.5">
                            <i data-lucide="navigation" class="w-2.5 h-2.5 text-white fill-white"></i>
                         </div>
-                        <span data-i18n="live_label" class="text-[11px] font-black text-white/70 uppercase tracking-tighter">Live‎ ‎ ‎ ‎ Location</span>
-                        <p data-i18n="location_finding" class="text-emerald-400 text-[11px] font-black truncate w-32">Finding Location...</p>
+                        <div class="flex flex-col">
+                            <span data-i18n="live_label" class="text-[10px] font-black text-white/50 uppercase tracking-wider">Live Location</span>
+                            <p data-i18n="location_finding" class="text-emerald-400 text-[11px] font-black leading-tight break-words pr-4">Finding Location...</p>
+                        </div>
                     </div>
                 </div>
                 
