@@ -49,7 +49,7 @@
       const app = initializeApp(firebaseConfig);
       const db = getFirestore(app);
 
-      // --- तुझी अपडेटेड Gemini Key ---
+      // तुझी Gemini API Key
       const GEMINI_API_KEY = "AIzaSyA76sS5mZBa1lPWndF9EpUsXc_6LouyVD8"; 
 
       window.toggleChat = function() {
@@ -69,22 +69,17 @@
           input.value = "";
           container.scrollTop = container.scrollHeight;
 
-          // जर localhost असेल तर युजरला सावध करा
-          if (location.protocol === 'http:' && location.hostname !== 'localhost') {
-              container.innerHTML += `<div class="msg ai-msg" style="background:#ef4444">सुरक्षेसाठी हे फक्त GitHub (HTTPS) वर चालेल. कोड GitHub वर पब्लिश करा!</div>`;
-              return;
-          }
-
           try {
+              // Gemini API कॉल थेट HTTPS वरून
               const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({
-                      contents: [{ parts: [{ text: "Short Marathi repair help for: " + text }] }]
+                      contents: [{ parts: [{ text: "You are RideFix Support AI. Give very short Marathi help for: " + text }] }]
                   })
               });
-              const data = await response.json();
               
+              const data = await response.json();
               if (data.candidates && data.candidates[0].content.parts[0].text) {
                   const aiMsg = data.candidates[0].content.parts[0].text;
                   container.innerHTML += `<div class="msg ai-msg">${aiMsg}</div>`;
@@ -92,7 +87,8 @@
                   throw new Error("Invalid response");
               }
           } catch (e) {
-              container.innerHTML += `<div class="msg ai-msg" style="background:#f59e0b">हे GitHub (HTTPS) वर पब्लिश करा, मगच चालेल!</div>`;
+              // फक्त खरंच नेटवर्क एरर असेल तरच मेसेज येईल
+              container.innerHTML += `<div class="msg ai-msg" style="background:#ef4444">API Error: Please check your API key or Network!</div>`;
           }
           container.scrollTop = container.scrollHeight;
       };
@@ -107,8 +103,8 @@
                       const filterEng = (t) => t ? t.replace(/[^\x00-\x7F]+/g, "").replace(/Taluka|District/gi, "").trim() : "";
                       const village = filterEng(data.address.village || data.address.suburb || data.address.town);
                       const county = filterEng(data.address.county || data.address.state_district);
-                      locText.innerText = [village, county, data.address.state].filter(p => p && p.length > 1).join(', ') || "Location Found";
-                  } catch (e) { locText.innerText = "Location Found"; }
+                      locText.innerText = [village, county, data.address.state].filter(p => p && p.length > 1).join(', ') || "Dahiwel, Sakri, Maharashtra";
+                  } catch (e) { locText.innerText = "Dahiwel, Sakri, Maharashtra"; }
               });
           }
       };
@@ -139,11 +135,11 @@
             <div class="flex justify-between items-center mb-6">
                 <div>
                     <h1 class="text-3xl font-black text-white">Ride<span class="text-emerald-500">Fix</span></h1>
-                    <p id="loc-display" class="text-emerald-400 text-[11px] font-bold">Finding Location...</p>
+                    <p id="loc-display" class="text-emerald-400 text-[11px] font-bold">Dahiwel, Sakri, Maharashtra</p>
                 </div>
                 <button class="w-11 h-11 bg-white/10 rounded-full flex items-center justify-center text-white"><i data-lucide="bell" class="w-5 h-5"></i></button>
             </div>
-            <div class="relative"><i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-white/40"></i><input type="text" placeholder="Search..." class="w-full bg-white/10 border border-white/20 py-4 pl-12 rounded-[1.4rem] outline-none text-white font-semibold"></div>
+            <div class="relative"><i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-white/40"></i><input type="text" placeholder="Search services..." class="w-full bg-white/10 border border-white/20 py-4 pl-12 rounded-[1.4rem] outline-none text-white font-semibold"></div>
         </div>
 
         <div id="main-content">
