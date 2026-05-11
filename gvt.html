@@ -70,7 +70,7 @@
           });
       });
 
-      // --- LocationIQ Real-Time Tracking ---
+      // --- Fast Real-Time Location Strategy ---
       window.updateLocation = function() {
           const locationText = document.querySelector('[data-i18n="location_finding"]');
           const API_KEY = "pk.ef72900a9a28ab20a90bdf78384adc16"; 
@@ -81,25 +81,33 @@
                       try {
                           const lat = position.coords.latitude;
                           const lon = position.coords.longitude;
+                          
                           const res = await fetch(`https://us1.locationiq.com/v1/reverse.php?key=${API_KEY}&lat=${lat}&lon=${lon}&format=json&accept-language=en`);
                           const data = await res.json();
                           
                           if (data && data.address) {
                               const a = data.address;
-                              // Gali, Neighborhood kiva Road che nav dakhvato
+                              // Gali, Road, kiva Area - jo pahila milel to patkan dakhvne
                               let display = a.road || a.suburb || a.neighbourhood || a.village || a.town || a.city || "Location Found";
-                              locationText.innerText = display;
-                              locationText.removeAttribute('data-i18n'); 
+                              
+                              if(locationText.innerText !== display) {
+                                  locationText.innerText = display;
+                                  locationText.removeAttribute('data-i18n');
+                              }
                           }
                       } catch (e) {
-                          console.error("LocationIQ Error");
+                          console.log("Fetch Error");
                       }
                   },
                   (err) => { 
-                      if(err.code === 1) locationText.innerText = "Access Denied";
+                      if(err.code === 1) locationText.innerText = "Permission Denied";
                       else locationText.innerText = "Searching...";
                   },
-                  { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                  { 
+                      enableHighAccuracy: false, // Speed vadhavnyasathi false kele aahe
+                      timeout: 5000, 
+                      maximumAge: 10000 
+                  }
               );
           }
       };
