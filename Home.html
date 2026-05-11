@@ -46,34 +46,12 @@
 
       let swiperInstance = null;
 
-      onSnapshot(collection(db, "banners"), (snap) => {
-          const wrapper = document.getElementById("banner-wrapper");
-          wrapper.innerHTML = "";
-          let slideCount = 0;
-          if(!snap.empty) {
-              snap.forEach(doc => {
-                  wrapper.innerHTML += `<div class="swiper-slide aspect-[16/9] relative"><img src="${doc.data().image}"><div class="absolute inset-0 banner-overlay"></div></div>`;
-                  slideCount++;
-              });
-          }
-          if (swiperInstance) swiperInstance.destroy(true, true);
-          const shouldLoop = slideCount > 1;
-          swiperInstance = new Swiper('.mySwiper', {
-              loop: shouldLoop, 
-              autoplay: shouldLoop ? { delay: 3000, disableOnInteraction: false } : false,
-              speed: 800,
-              pagination: { el: '.swiper-pagination', clickable: true },
-              effect: 'fade',
-              fadeEffect: { crossFade: true },
-              observer: true,
-              observeParents: true
-          });
-      });
-
-      // --- Updated Location Logic with Custom Format ---
+      // --- Optimized Location Logic ---
       window.updateLocation = function() {
           const locationText = document.querySelector('[data-i18n="location_finding"]');
           const REST_KEY = "7d2d28fe690283ec1eda04ce0b463789"; 
+
+          locationText.innerText = "Searching Location...";
 
           if (navigator.geolocation) {
               navigator.geolocation.getCurrentPosition(async (position) => {
@@ -87,7 +65,6 @@
                       if (data && data.results && data.results.length > 0) {
                           const addr = data.results[0];
                           
-                          // Format: Village, Sub-District, State
                           let village = addr.locality || addr.village || addr.area || "Unknown Village";
                           let subDistrict = addr.subDistrict || addr.sub_district || "Sakri";
                           let state = addr.state || "Maharashtra";
@@ -101,31 +78,44 @@
                           locationText.removeAttribute('data-i18n');
                       }
                   } catch (e) {
-                      locationText.innerText = "Error Fetching Location";
+                      locationText.innerText = "Connection Error";
                   }
               }, (err) => {
-                  locationText.innerText = "GPS Permission Denied";
-              }, { enableHighAccuracy: true, timeout: 10000 });
+                  if (err.code === 1) {
+                      locationText.innerText = "Location Permission Denied";
+                  } else if (err.code === 3) {
+                      locationText.innerText = "Signal Weak - Retrying...";
+                      setTimeout(updateLocation, 3000); 
+                  } else {
+                      locationText.innerText = "Location Unavailable";
+                  }
+              }, { 
+                  enableHighAccuracy: false, // ग्रामीण भागात हे लवकर नाव शोधेल
+                  timeout: 20000,           // २० सेकंद वेळ दिला आहे
+                  maximumAge: 0 
+              });
           }
       };
 
-      const translations = {
-          en: { live_label: "Live Location", location_finding: "Finding Location...", services_title: "Our Services", search_placeholder: "Search services...", nav_home: "Home", nav_book: "Bookings", nav_support: "Support", nav_history: "History", nav_profile: "Profile" },
-          mr: { live_label: "लाईव्ह लोकेशन", location_finding: "शोधत आहे...", services_title: "आमच्या सेवा", search_placeholder: "सेवा शोधा...", nav_home: "होम", nav_book: "बुकिंग", nav_support: "सपोर्ट", nav_history: "इतिहास", nav_profile: "प्रोफाईल" },
-          hi: { live_label: "लाइव लोकेशन", location_finding: "खोज रहे हैं...", services_title: "हमारी सेवाएं", search_placeholder: "सेवा खोजें...", nav_home: "होम", nav_book: "बुकिंग", nav_support: "सपोर्ट", nav_history: "इतिहास", nav_profile: "प्रोफ़ाइल" }
-      };
-
-      window.changeLanguage = function(lang) {
-          const t = translations[lang];
-          document.querySelectorAll("[data-i18n]").forEach(el => {
-              const key = el.getAttribute("data-i18n");
-              if (el.tagName === "INPUT") el.placeholder = t[key];
-              else el.innerText = t[key];
+      // Banner Logic
+      onSnapshot(collection(db, "banners"), (snap) => {
+          const wrapper = document.getElementById("banner-wrapper");
+          wrapper.innerHTML = "";
+          let slideCount = 0;
+          snap.forEach(doc => {
+              wrapper.innerHTML += `<div class="swiper-slide aspect-[16/9] relative"><img src="${doc.data().image}"><div class="absolute inset-0 banner-overlay"></div></div>`;
+              slideCount++;
           });
-          document.getElementById("lang-menu").classList.add("hidden");
-          document.documentElement.lang = lang;
-      };
+          if (swiperInstance) swiperInstance.destroy(true, true);
+          swiperInstance = new Swiper('.mySwiper', {
+              loop: slideCount > 1, 
+              autoplay: slideCount > 1 ? { delay: 3000 } : false,
+              pagination: { el: '.swiper-pagination', clickable: true },
+              observer: true, observeParents: true
+          });
+      });
 
+      // Services Logic
       let allServices = []; 
       onSnapshot(collection(db, "services"), (snapshot) => {
           allServices = [];
@@ -141,6 +131,7 @@
           });
       };
 
+      // Search Logic
       window.handleSearch = function(query) {
           const mainContent = document.getElementById("main-content");
           const searchBox = document.getElementById("floating-search-results");
@@ -149,7 +140,7 @@
               searchBox.classList.remove("hidden");
               searchBox.innerHTML = "";
               allServices.filter(s => s.name.toLowerCase().includes(query.toLowerCase())).forEach((s, i) => {
-                  searchBox.innerHTML += `<div style="animation: reveal 0.4s cubic-bezier(0.1, 0.9, 0.2, 1) ${i * 0.04}s both" class="bg-white/80 backdrop-blur-xl flex items-center gap-4 p-4 mb-3 rounded-3xl border border-white/40"><img src="${s.image}" class="w-12 h-12 rounded-[1rem] object-cover"><div class="flex-1"><p class="font-black text-slate-900 text-[15px] leading-tight">${s.name}</p><p class="text-[10px] font-bold text-slate-400 uppercase mt-0.5 tracking-wider">Ridefix Service</p></div></div>`;
+                  searchBox.innerHTML += `<div style="animation: reveal 0.4s cubic-bezier(0.1, 0.9, 0.2, 1) ${i * 0.04}s both" class="bg-white/80 backdrop-blur-xl flex items-center gap-4 p-4 mb-3 rounded-3xl border border-white/40"><img src="${s.image}" class="w-12 h-12 rounded-[1rem] object-cover"><div class="flex-1"><p class="font-black text-slate-900 text-[15px] leading-tight">${s.name}</p></div></div>`;
               });
           } else {
               mainContent.classList.remove("blur-content");
@@ -157,7 +148,10 @@
           }
       };
 
-      window.addEventListener('load', updateLocation);
+      window.addEventListener('load', () => {
+          updateLocation();
+          lucide.createIcons();
+      });
     </script>
 </head>
 <body class="antialiased">
@@ -166,52 +160,47 @@
             <div class="flex justify-between items-center mb-6">
                 <div class="flex flex-col flex-1">
                     <h1 class="text-3xl logo-font header-text leading-none mb-1.5">Ride<span class="text-emerald-500">Fix</span></h1>
-                    <div class="flex items-start gap-1.5">
-                        <div class="flex items-center justify-center bg-emerald-500 p-1 rounded-md shadow-sm mt-0.5"><i data-lucide="navigation" class="w-2.5 h-2.5 text-white fill-white"></i></div>
+                    <div class="flex items-start gap-1.5" onclick="updateLocation()">
+                        <div class="flex items-center justify-center bg-emerald-500 p-1 rounded-md mt-0.5"><i data-lucide="navigation" class="w-2.5 h-2.5 text-white fill-white"></i></div>
                         <div class="flex flex-col flex-1">
-                            <span data-i18n="live_label" class="text-[10px] font-black text-white/50 uppercase tracking-wider">Live Location</span>
-                            <p data-i18n="location_finding" class="text-emerald-400 text-[11px] font-black leading-tight break-words pr-2">Finding Location...</p>
+                            <span class="text-[10px] font-black text-white/50 uppercase tracking-wider">Live Location</span>
+                            <p data-i18n="location_finding" class="text-emerald-400 text-[11px] font-black leading-tight break-words pr-2">Searching Location...</p>
                         </div>
                     </div>
                 </div>
                 <div class="flex items-center gap-2.5 relative">
-                    <button onclick="document.getElementById('lang-menu').classList.toggle('hidden')" class="w-11 h-11 flex items-center justify-center bg-white/10 rounded-full border border-white/20 active:scale-90 transition z-[3001]"><i data-lucide="globe" class="w-5 h-5 text-white"></i></button>
-                    <div id="lang-menu" class="hidden absolute top-full right-0 mt-3 bg-black/90 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-[2rem] w-40 p-2 z-[3002]">
-                        <button onclick="changeLanguage('mr')" class="w-full text-left px-5 py-3 hover:bg-white/10 rounded-2xl text-[13px] font-black text-white">मराठी</button>
-                        <button onclick="changeLanguage('hi')" class="w-full text-left px-5 py-3 hover:bg-white/10 rounded-2xl text-[13px] font-black text-white">हिंदी</button>
-                        <button onclick="changeLanguage('en')" class="w-full text-left px-5 py-3 hover:bg-white/10 rounded-2xl text-[13px] font-black text-white">English</button>
-                    </div>
+                    <button class="w-11 h-11 flex items-center justify-center bg-white/10 rounded-full border border-white/20 active:scale-90"><i data-lucide="globe" class="w-5 h-5 text-white"></i></button>
                     <button class="w-11 h-11 flex items-center justify-center bg-white/10 rounded-full border border-white/20"><i data-lucide="bell" class="w-5 h-5 text-white"></i></button>
                 </div>
             </div>
             <div class="relative z-[1100]">
                 <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40"></i>
-                <input type="text" data-i18n="search_placeholder" oninput="handleSearch(this.value)" placeholder="Search services..." class="w-full search-bg py-4 pl-12 pr-4 rounded-[1.4rem] outline-none text-[16px] font-semibold transition-all">
+                <input type="text" oninput="handleSearch(this.value)" placeholder="Search services..." class="w-full search-bg py-4 pl-12 pr-4 rounded-[1.4rem] outline-none text-[16px] font-semibold">
             </div>
             <div id="floating-search-results" class="hidden absolute left-6 right-6 top-full mt-6 z-[2000]"></div>
         </div>
 
         <div id="main-content">
             <div class="relative w-full pt-[185px] bg-black">
-                <div class="swiper mySwiper w-full">
+                <div class="swiper mySwiper w-full h-[220px]">
                     <div class="swiper-wrapper" id="banner-wrapper"></div>
                     <div class="swiper-pagination !bottom-4"></div>
                 </div>
             </div>
-            <div class="bg-[#f2f2f7] -mt-6 relative z-20 rounded-t-[2.5rem] pt-10 px-6 pb-32">
-                <h3 data-i18n="services_title" class="font-black text-2xl text-black mb-6">Our Services</h3>
+            <div class="bg-[#f2f2f7] -mt-6 relative z-20 rounded-t-[2.5rem] pt-10 px-6 pb-32 min-h-screen">
+                <h3 class="font-black text-2xl text-black mb-6">Our Services</h3>
                 <div id="services-grid" class="grid grid-cols-2 gap-5"></div>
             </div>
         </div>
 
         <div class="fixed bottom-0 left-0 right-0 max-w-[450px] mx-auto bg-white/70 backdrop-blur-3xl border-t border-slate-100/50 px-8 py-6 flex justify-between items-center z-[1500] rounded-t-[2.8rem]">
-            <div class="flex flex-col items-center text-black"><i data-lucide="home" class="w-6 h-6 stroke-[2.5px]"></i><span data-i18n="nav_home" class="text-[10px] font-black mt-1 uppercase">Home</span></div>
-            <div class="flex flex-col items-center text-slate-400"><i data-lucide="calendar" class="w-6 h-6"></i><span data-i18n="nav_book" class="text-[10px] font-bold mt-1 uppercase">Bookings</span></div>
-            <div class="flex flex-col items-center text-slate-400"><div class="support-btn w-12 h-12 rounded-2xl flex items-center justify-center -mt-12 mb-1 border-4 border-[#f2f2f7]"><i data-lucide="headset" class="w-6 h-6 text-white stroke-[2.5px]"></i></div><span data-i18n="nav_support" class="text-[10px] font-bold uppercase">Support</span></div>
-            <div class="flex flex-col items-center text-slate-400"><i data-lucide="history" class="w-6 h-6"></i><span data-i18n="nav_history" class="text-[10px] font-bold mt-1 uppercase">History</span></div>
-            <div class="flex flex-col items-center text-slate-400"><i data-lucide="user" class="w-6 h-6"></i><span data-i18n="nav_profile" class="text-[10px] font-bold mt-1 uppercase">Profile</span></div>
+            <div class="flex flex-col items-center text-black"><i data-lucide="home" class="w-6 h-6 stroke-[2.5px]"></i><span class="text-[10px] font-black mt-1 uppercase">Home</span></div>
+            <div class="flex flex-col items-center text-slate-400"><i data-lucide="calendar" class="w-6 h-6"></i><span class="text-[10px] font-bold mt-1 uppercase">Bookings</span></div>
+            <div class="flex flex-col items-center text-slate-400"><div class="support-btn w-12 h-12 rounded-2xl flex items-center justify-center -mt-12 mb-1 border-4 border-[#f2f2f7]"><i data-lucide="headset" class="w-6 h-6 text-white stroke-[2.5px]"></i></div><span class="text-[10px] font-bold uppercase">Support</span></div>
+            <div class="flex flex-col items-center text-slate-400"><i data-lucide="history" class="w-6 h-6"></i><span class="text-[10px] font-bold mt-1 uppercase">History</span></div>
+            <div class="flex flex-col items-center text-slate-400"><i data-lucide="user" class="w-6 h-6"></i><span class="text-[10px] font-bold mt-1 uppercase">Profile</span></div>
         </div>
     </div>
-    <script> lucide.createIcons(); </script>
+    <script> setTimeout(() => lucide.createIcons(), 500); </script>
 </body>
 </html>
