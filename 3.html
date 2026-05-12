@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RideFix - Accurate GPS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #000; user-select: none; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+        ::-webkit-scrollbar { display: none; }
+        .ios-header { background: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 80%, transparent 100%); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+        .logo-font { font-weight: 900; letter-spacing: -0.05em; }
+        .search-bg { background: rgba(255, 255, 255, 0.1) !important; color: white; border: 1px solid rgba(255,255,255,0.1); }
+        .banner-card { border-radius: 2.2rem; overflow: hidden; transform: translateZ(0); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .service-card { animation: fadeIn 0.4s ease-out forwards; }
+    </style>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+      import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+      import { Swiper } from 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.mjs'
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyDyAqz5_6-i7xIlPAdMUBhdVCZwV262Prw",
+        authDomain: "ridefix-final.firebaseapp.com",
+        projectId: "ridefix-final",
+        storageBucket: "ridefix-final.firebasestorage.app",
+        messagingSenderId: "175554582400",
+        appId: "1:175554582400:web:f40c9b80354d6963ab1365"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      let swiperInstance = null;
+
+      // --- Precise Real-time Location Logic ---
+      window.updateLocation = function() {
+          const locationText = document.getElementById('location-display');
+          const GOOGLE_API_KEY = "AIzaSyClcel-N682oF2GZYT6UBcJ_NofMy1rTRA"; 
+
+          if (!locationText) return;
+          locationText.innerText = "Connecting GPS...";
+
+          // Backup: Instant IP result (in case GPS is slow)
+          const fetchIPLoc = async () => {
+              try {
+                  const res = await fetch('https://ipapi.co/json/');
+                  const data = await res.json();
+                  if(data.city && locationText.innerText.includes("Connecting")) {
+                      locationText.innerText = data.city;
+                  }
+              } catch (e) {}
+          };
+          fetchIPLoc();
+
+          const options = { 
+              enableHighAccuracy: true, 
+              timeout: 15000, 
+              maximumAge: 0 // Dahivel dakhvnyasathi junya data kitihi nako
+          };
+
+          if (navigator.geolocation) {
+              navigator.geolocation.watchPosition(async (position) => {
+                  const { latitude, longitude } = position.coords;
+                  try {
+                      const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_API_KEY}&language=mr`);
+                      const data = await res.json();
+                      if (data.status === "OK") {
+                          const results = data.results[0].address_components;
+                          let town = "", tehsil = "", area = "";
+
+                          results.forEach(c => {
+                              if (c.types.includes("sublocality") || c.types.includes("neighborhood")) area = c.long_name;
+                              if (c.types.includes("locality")) town = c.long_name;
+                              if (c.types.includes("administrative_area_level_3")) tehsil = c.long_name;
+                          });
+
+                          // Dahivel chya cases madhe town kiva tehsil dakhvne garjeche aahe
+                          locationText.innerText = area ? `${area}, ${town || tehsil}` : (town || tehsil || "Dahivel");
+                      }
+                  } catch (e) {
+                      console.log("GPS Fetch Error");
+                  }
+              }, (err) => {
+                  if(err.code === 1) locationText.innerText = "GPS Permission Off";
+                  else locationText.innerText = "Weak Signal (Go Outside)";
+              }, options);
+          }
+      };
+
+      // Realtime Banners
+      onSnapshot(collection(db, "banners"), (snap) => {
+          const wrapper = document.getElementById("banner-wrapper");
+          wrapper.innerHTML = "";
+          snap.forEach(doc => {
+              wrapper.innerHTML += `
+                <div class="swiper-slide banner-card relative aspect-[16/9]">
+                    <img src="${doc.data().image}" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                </div>`;
+          });
+          if (swiperInstance) swiperInstance.destroy(true, true);
+          swiperInstance = new Swiper('.mySwiper', {
+              loop: true, autoplay: { delay: 3000 },
+              pagination: { el: '.swiper-pagination', clickable: true },
+              spaceBetween: 10
+          });
+      });
+
+      // Realtime Services
+      onSnapshot(collection(db, "services"), (snapshot) => {
+          const grid = document.getElementById("services-grid");
+          grid.innerHTML = "";
+          snapshot.forEach((doc, index) => {
+              const s = doc.data();
+              grid.innerHTML += `
+                <div class="service-card bg-white rounded-[2rem] p-2 shadow-sm border border-slate-50 active:scale-95 transition-all">
+                    <div class="w-full h-[120px] overflow-hidden rounded-[1.6rem] bg-slate-100">
+                        <img src="${s.image}" class="w-full h-full object-cover">
+                    </div>
+                    <p class="text-center font-bold text-[13px] py-4 text-slate-800">${s.name}</p>
+                </div>`;
+          });
+      });
+
+      window.addEventListener('load', () => {
+          updateLocation();
+          setTimeout(() => lucide.createIcons(), 500);
+      });
+    </script>
+</head>
+<body class="antialiased">
+    <div class="max-w-[450px] mx-auto bg-white min-h-screen relative shadow-2xl">
+        
+        <div class="ios-header p-6 fixed top-0 left-0 right-0 z-[1000] max-w-[450px] mx-auto">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex flex-col flex-1">
+                    <h1 class="text-3xl logo-font text-white leading-none mb-2">Ride<span class="text-emerald-500">Fix</span></h1>
+                    <div class="flex items-center gap-2" onclick="updateLocation()">
+                        <div class="bg-emerald-500 p-1 rounded-md shadow-lg">
+                            <i data-lucide="navigation" class="w-3 h-3 text-white fill-white"></i>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-[9px] font-black text-white/40 uppercase tracking-widest">LIVE LOCATION</span>
+                            <p id="location-display" class="text-emerald-400 text-[11px] font-bold leading-tight">Finding you...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-10 h-10 flex items-center justify-center bg-white/10 rounded-full border border-white/20">
+                    <i data-lucide="bell" class="w-5 h-5 text-white"></i>
+                </div>
+            </div>
+            <div class="relative">
+                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40"></i>
+                <input type="text" placeholder="Search services..." class="w-full search-bg py-4 pl-12 pr-4 rounded-2xl outline-none text-[15px] font-semibold">
+            </div>
+        </div>
+
+        <div class="pt-[195px] pb-32">
+            <div class="px-5 mb-8">
+                <div class="swiper mySwiper w-full h-[200px] rounded-[2.5rem] shadow-xl shadow-black/10">
+                    <div class="swiper-wrapper" id="banner-wrapper"></div>
+                    <div class="swiper-pagination"></div>
+                </div>
+            </div>
+
+            <div class="bg-[#f8f9fc] rounded-t-[2.8rem] px-6 pt-10 min-h-[500px]">
+                <h3 class="font-black text-xl text-zinc-900 tracking-tight mb-6 ml-2">Our Services</h3>
+                <div id="services-grid" class="grid grid-cols-2 gap-5"></div>
+            </div>
+        </div>
+
+        <div class="fixed bottom-0 left-0 right-0 max-w-[450px] mx-auto bg-white/80 backdrop-blur-3xl border-t border-slate-100/50 px-8 py-6 flex justify-between items-center z-[1500] rounded-t-[2.8rem]">
+            <div class="flex flex-col items-center text-emerald-600"><i data-lucide="home" class="w-6 h-6 stroke-[2.5px]"></i></div>
+            <div class="flex flex-col items-center text-slate-400"><i data-lucide="calendar" class="w-6 h-6"></i></div>
+            <div class="flex flex-col items-center">
+                <div class="bg-zinc-900 w-14 h-14 rounded-2xl flex items-center justify-center -mt-14 border-[6px] border-[#f8f9fc] shadow-xl active:scale-90 transition-transform">
+                    <i data-lucide="headset" class="w-6 h-6 text-white"></i>
+                </div>
+            </div>
+            <div class="flex flex-col items-center text-slate-400"><i data-lucide="history" class="w-6 h-6"></i></div>
+            <div class="flex flex-col items-center text-slate-400"><i data-lucide="user" class="w-6 h-6"></i></div>
+        </div>
+    </div>
+    <script>setTimeout(() => lucide.createIcons(), 1000);</script>
+</body>
+</html>
