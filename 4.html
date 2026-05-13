@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <title>RideFix Premium Service</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #000; overflow-x: hidden; -webkit-user-select: none; user-select: none; }
+        ::-webkit-scrollbar { display: none; }
+        .ios-header { background: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 75%, transparent 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); }
+        .logo-font { font-weight: 900; letter-spacing: -0.06em; }
+        .search-bg { background: rgba(255, 255, 255, 0.12)!important; color: white; border: 0.5px solid rgba(255,255,255,0.2); }
+        .search-bg::placeholder { color: rgba(255,255,255,0.5); }
+        .swiper-pagination-bullet { background: white!important; opacity: 0.5; width: 5px; height: 5px; transition: 0.3s; }
+        .swiper-pagination-bullet-active { opacity: 1; width: 18px; border-radius: 10px; background: #10b981!important; }
+        .banner-overlay { background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.7) 100%); }
+        .support-btn { background: #000; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .swiper-slide img { width: 100%; height: 100%; object-fit: cover; }
+        @keyframes reveal { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        #langModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 3000; align-items: center; justify-content: center; }
+        .lang-card { background: white; width: 85%; border-radius: 2.8rem; padding: 2.5rem; transform: scale(0.9); transition: 0.3s; }
+        #langModal.active .lang-card { transform: scale(1); }
+    </style>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+        import Swiper from 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.mjs';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDyAqz5_6-i7xIlPAdMUBhdVCZwV262Prw",
+            authDomain: "ridefix-final.firebaseapp.com",
+            projectId: "ridefix-final",
+            storageBucket: "ridefix-final.firebasestorage.app",
+            messagingSenderId: "175554582400",
+            appId: "1:175554582400:web:f40c9b80354d6963ab1365",
+            measurementId: "G-EMCTJE6773"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        let swiperInstance = null;
+
+        const translations = {
+            en: { live_loc: "Live Location", search_placeholder: "Search services...", our_services: "Our Services", view_all: "View All", home: "Home", bookings: "Bookings", support: "Support", history: "History", profile: "Profile" },
+            mr: { live_loc: "लाईव्ह लोकेशन", search_placeholder: "सेवा शोधा...", our_services: "आमच्या सेवा", view_all: "सर्व पहा", home: "मुख्य", bookings: "बुकिंग", support: "मदत", history: "इतिहास", profile: "प्रोफाईल" },
+            hi: { live_loc: "लाइव लोकेशन", search_placeholder: "सेवा खोजें...", our_services: "हमारी सेवाएं", view_all: "सभी देखें", home: "होम", bookings: "बुकिंग", support: "सहायता", history: "इतिहास", profile: "प्रोफाइल" }
+        };
+
+        window.setLanguage = function(lang) {
+            const t = translations[lang];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (el.tagName === 'INPUT') el.placeholder = t[key];
+                else el.innerText = t[key];
+            });
+            toggleLang(false);
+        };
+
+        window.updateLocation = function() {
+            const locText = document.getElementById("location-display");
+            const accuracyText = document.getElementById("accuracy-display");
+            if (!navigator.geolocation) { locText.innerText = "GPS Not Supported"; return; }
+            locText.innerText = "Finding location...";
+            navigator.geolocation.watchPosition(async (position) => {
+                const { latitude: lat, longitude: lng, accuracy } = position.coords;
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&accept-language=en&lat=${lat}&lon=${lng}`);
+                    const data = await response.json();
+                    const a = data.address;
+                    let address = [a.suburb || a.neighbourhood || a.village || a.road, a.city || a.town || a.county, a.state].filter(Boolean).join(", ");
+                    locText.innerText = address || "Your Location";
+                    accuracyText.innerText = `${Math.round(accuracy)}m • ${accuracy <= 20 ? 'Very Accurate' : 'Finding Signal'}`;
+                } catch (err) { locText.innerText = "Your Location"; }
+            }, (err) => { locText.innerText = "Access Denied"; }, { enableHighAccuracy: true });
+        };
+
+        // BANNERS WITH MIX (SMOOTH SLIDE) EFFECT
+        onSnapshot(collection(db, "banners"), (snap) => {
+            const wrapper = document.getElementById("banner-wrapper");
+            wrapper.innerHTML = "";
+            snap.forEach(doc => {
+                wrapper.innerHTML += `<div class="swiper-slide aspect-[16/9] relative"><img src="${doc.data().image}"><div class="absolute inset-0 banner-overlay"></div></div>`;
+            });
+            if (swiperInstance) swiperInstance.destroy(true, true);
+            swiperInstance = new Swiper('.mySwiper', { 
+                speed: 800,
+                loop: true, 
+                autoplay: { delay: 3000, disableOnInteraction: false }, 
+                pagination: { el: '.swiper-pagination', clickable: true } 
+            });
+        });
+
+        // SERVICES WITH FIX
+        onSnapshot(collection(db, "services"), (snapshot) => {
+            const grid = document.getElementById("services-grid");
+            grid.innerHTML = "";
+            snapshot.forEach((doc, i) => {
+                const s = doc.data();
+                grid.innerHTML += `
+                    <div style="animation: reveal 0.5s ease-out ${i * 0.05}s forwards; opacity: 0;" class="bg-white rounded-[2.2rem] border border-slate-100 p-2 shadow-sm active:scale-95 transition-all overflow-hidden h-auto">
+                        <div class="w-full h-[115px] overflow-hidden rounded-[1.8rem] bg-slate-100">
+                            <img src="${s.image}" class="w-full h-full object-cover">
+                        </div>
+                        <p class="text-center font-bold text-[13px] py-4 text-slate-800 tracking-tight">${s.name}</p>
+                    </div>`;
+            });
+        });
+
+        window.toggleLang = (show) => {
+            const modal = document.getElementById('langModal');
+            if (show) { modal.style.display = 'flex'; setTimeout(() => modal.classList.add('active'), 10); }
+            else { modal.classList.remove('active'); setTimeout(() => modal.style.display = 'none', 300); }
+        };
+
+        window.addEventListener('load', () => { setLanguage('mr'); updateLocation(); lucide.createIcons(); });
+    </script>
+</head>
+<body class="antialiased">
+    <div id="langModal" onclick="toggleLang(false)">
+        <div class="lang-card" onclick="event.stopPropagation()">
+            <h4 class="text-2xl font-black text-slate-900 mb-8 text-center">Choose Language</h4>
+            <div class="space-y-4">
+                <button onclick="setLanguage('en')" class="w-full py-5 bg-slate-50 text-slate-900 font-bold rounded-3xl border border-slate-200">English</button>
+                <button onclick="setLanguage('mr')" class="w-full py-5 bg-slate-50 text-slate-900 font-bold rounded-3xl border border-slate-200">मराठी</button>
+                <button onclick="setLanguage('hi')" class="w-full py-5 bg-slate-50 text-slate-900 font-bold rounded-3xl border border-slate-200">हिंदी</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-[450px] mx-auto bg-white min-h-screen shadow-2xl relative">
+        <div class="ios-header p-6 fixed top-0 left-0 right-0 z-[1000] max-w-[450px] mx-auto">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex flex-col flex-1">
+                    <h1 class="text-3xl logo-font text-white leading-none mb-1.5">Ride<span class="text-emerald-500">Fix</span></h1>
+                    <div class="flex items-start gap-1.5" onclick="updateLocation()">
+                        <div class="flex items-center justify-center bg-emerald-500 p-1 rounded-md mt-0.5"><i data-lucide="navigation" class="w-2.5 h-2.5 text-white fill-white"></i></div>
+                        <div class="flex flex-col flex-1">
+                            <span data-i18n="live_loc" class="text-[10px] font-black text-white/50 uppercase tracking-wider">Live Location</span>
+                            <p id="location-display" class="text-emerald-400 text-[12px] font-black leading-tight truncate pr-2">Searching...</p>
+                            <p id="accuracy-display" class="text-white/40 text-[10px] font-semibold"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <button onclick="toggleLang(true)" class="w-11 h-11 flex items-center justify-center bg-white/10 rounded-full border border-white/20"><i data-lucide="globe" class="w-5 h-5 text-white"></i></button>
+                    <button class="w-11 h-11 flex items-center justify-center bg-white/10 rounded-full border border-white/20"><i data-lucide="bell" class="w-5 h-5 text-white"></i></button>
+                </div>
+            </div>
+            <div class="relative z-[1100]">
+                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40"></i>
+                <input data-i18n="search_placeholder" type="text" placeholder="Search..." class="w-full search-bg py-4 pl-12 pr-4 rounded-[1.4rem] outline-none text-[16px] font-semibold">
+            </div>
+        </div>
+
+        <!-- Header Padding + Banner -->
+        <div class="relative w-full pt-[185px] bg-black">
+            <div class="swiper mySwiper w-full h-[220px]">
+                <div class="swiper-wrapper" id="banner-wrapper"></div>
+                <div class="swiper-pagination !bottom-4"></div>
+            </div>
+        </div>
+
+        <!-- Services Section -->
+        <div class="bg-[#f2f2f7] -mt-6 relative z-20 rounded-t-[2.5rem] pt-10 px-6 pb-32 min-h-screen">
+            <div class="flex justify-between items-center mb-6">
+                <h3 data-i18n="our_services" class="font-black text-2xl text-black">Our Services</h3>
+                <span data-i18n="view_all" class="text-emerald-600 text-[10px] font-bold uppercase tracking-widest">View All</span>
+            </div>
+            <div id="services-grid" class="grid grid-cols-2 gap-5 min-h-[200px]">
+                <!-- Services will load here -->
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="fixed bottom-0 left-0 right-0 max-w-[450px] mx-auto bg-white/70 backdrop-blur-3xl border-t border-slate-100/50 px-8 py-6 flex justify-between items-center z-[1500] rounded-t-[2.8rem]">
+            <div class="flex flex-col items-center text-black"><i data-lucide="home" class="w-6 h-6 stroke-[2.5px]"></i><span data-i18n="home" class="text-[10px] font-black mt-1 uppercase">Home</span></div>
+            <div class="flex flex-col items-center text-slate-400"><i data-lucide="calendar" class="w-6 h-6"></i><span data-i18n="bookings" class="text-[10px] font-bold mt-1 uppercase">Bookings</span></div>
+            <div class="flex flex-col items-center">
+                <div class="support-btn w-12 h-12 rounded-2xl flex items-center justify-center -mt-14 mb-1 border-4 border-[#f2f2f7] shadow-lg active:scale-90 transition duration-300"><i data-lucide="headset" class="w-6 h-6 text-white stroke-[2.5px]"></i></div>
+                <span data-i18n="support" class="text-[10px] font-bold uppercase text-slate-400">Support</span>
+            </div>
+            <div class="flex flex-col items-center text-slate-400"><i data-lucide="history" class="w-6 h-6"></i><span data-i18n="history" class="text-[10px] font-bold mt-1 uppercase">History</span></div>
+            <div class="flex flex-col items-center text-slate-400"><i data-lucide="user" class="w-6 h-6"></i><span data-i18n="profile" class="text-[10px] font-bold mt-1 uppercase">Profile</span></div>
+        </div>
+    </div>
+
+    <script> 
+        setTimeout(() => {
+            lucide.createIcons();
+        }, 800); 
+    </script>
+</body>
+</html>
