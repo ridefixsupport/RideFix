@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>RideFix Premium Support</title>
+
+<!-- CSS & Icons -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+
+<style>
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: #000;
+    overflow-x: hidden;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+::-webkit-scrollbar {
+    display: none;
+}
+
+/* iOS ब्लर सिस्टीम हेडर */
+.ios-header {
+    background: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 75%, transparent 100%);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+}
+
+.logo-font {
+    font-weight: 900;
+    letter-spacing: -0.06em;
+}
+
+/* Home Screen सारखं प्रिमियम लाईट कंटेनर मॅच */
+.premium-bg-content {
+    background: #f2f2f7;
+    border-top-left-radius: 2.8rem;
+    border-top-right-radius: 2.8rem;
+}
+
+/* Home Screen शी मॅच होणारी प्रिमियम पांढरी कार्ड्स */
+.premium-ui-card {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.02);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.03);
+}
+
+/* 🌟 ३ सेकंदाच्या आत स्मूथली येणारे प्रिमियम ॲनिमेशन्स */
+@keyframes revealSpring {
+    0% {
+        opacity: 0;
+        transform: translateY(30px) scale(0.96);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes fadeOutFast {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(0.95); }
+}
+
+/* सुरुवातीला सर्व लपलेले असेल आणि ॲनिमेशनने वर येईल */
+.reveal-animate {
+    opacity: 0;
+    animation: revealSpring 0.8s cubic-bezier(0.2, 1, 0.2, 1) forwards;
+}
+
+.animate-fade-out {
+    animation: fadeOutFast 0.25s cubic-bezier(0.2, 1, 0.2, 1) forwards;
+}
+
+/* Staggered Delays - सर्व गोष्टी एकामागे एक ३ सेकंदाच्या आत लोड होतील */
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.25s; }
+.delay-3 { animation-delay: 0.4s; }
+.delay-4 { animation-delay: 0.55s; }
+
+#help-graphic-card {
+    display: none;
+    opacity: 0;
+}
+
+.support-btn-main {
+    background: #000;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+/* Accordion Smooth Expand */
+.faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s cubic-bezier(0.2, 1, 0.2, 1), opacity 0.2s ease;
+    opacity: 0;
+}
+.faq-item.active .faq-answer {
+    max-height: 100px;
+    opacity: 1;
+    margin-top: 8px;
+}
+.faq-item.active .faq-icon {
+    transform: rotate(180deg);
+    color: #10b981;
+}
+</style>
+</head>
+
+<body class="antialiased">
+<div class="max-w-[450px] mx-auto bg-black min-h-screen relative flex flex-col justify-between shadow-2xl">
+
+    <!-- TOP HEADER -->
+    <div class="ios-header p-6 fixed top-0 left-0 right-0 z-[1000] max-w-[450px] mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <a href="home.html" class="w-11 h-11 flex items-center justify-center bg-white/10 rounded-full border border-white/20 active:scale-90 transition duration-200">
+                <i data-lucide="arrow-left" class="w-5 h-5 text-white"></i>
+            </a>
+            <h1 id="lang-header-title" class="text-xl font-black text-white tracking-tight">Support Centre</h1>
+        </div>
+        <h1 class="text-3xl logo-font text-white leading-none">
+            Ride<span class="text-emerald-500">Fix</span>
+        </h1>
+    </div>
+
+    <!-- MAIN CONTENT AREA -->
+    <div class="flex-1 pt-[130px] premium-bg-content px-6 pb-36 flex flex-col justify-start">
+        
+        <!-- INITIAL STATE SECTION -->
+        <div id="initial-state" class="w-full">
+            
+            <!-- Icon Hero Area -->
+            <div class="text-center py-6 reveal-animate delay-1">
+                <div class="w-20 h-20 bg-gradient-to-tr from-emerald-500/20 to-emerald-400/5 border border-emerald-500/20 rounded-[2.2rem] flex items-center justify-center mx-auto mb-5 shadow-sm animate-pulse">
+                    <i data-lucide="headphones" class="w-10 h-10 text-emerald-500 stroke-[1.8]"></i>
+                </div>
+                <h2 id="lang-main-title" class="text-2xl font-black tracking-tight mb-2 text-slate-900">Facing any issues?</h2>
+                <p id="lang-main-desc" class="text-slate-500 text-sm font-semibold px-6 mb-6 leading-relaxed">Our premium support team is available 24/7 to resolve your problems instantly.</p>
+                
+                <!-- MAIN HELP BUTTON -->
+                <button 
+                    onclick="showProfessionalHelp()" 
+                    class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[16px] py-4 rounded-[1.6rem] transition duration-300 active:scale-95 shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
+                >
+                    <span id="lang-btn-help">We Need Help</span>
+                    <i data-lucide="arrow-right" class="w-5 h-5 stroke-[3]"></i>
+                </button>
+            </div>
+
+            <!-- 🌟 NEW: FAQ SECTION (पेज भरलेलं आणि प्रिमियम दिसण्यासाठी) -->
+            <div class="mt-4 reveal-animate delay-2">
+                <h3 id="lang-faq-title" class="font-black text-xl text-black mb-4 px-1">Frequently Asked Questions</h3>
+                
+                <div class="flex flex-col gap-3">
+                    <!-- FAQ 1 -->
+                    <div class="premium-ui-card rounded-[1.4rem] p-4 faq-item cursor-pointer" onclick="toggleFaq(this)">
+                        <div class="flex justify-between items-center gap-2">
+                            <p id="lang-q1" class="font-bold text-[14px] text-slate-800 tracking-tight">How much time will the mechanic take to arrive?</p>
+                            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform duration-300 faq-icon"></i>
+                        </div>
+                        <p id="lang-a1" class="faq-answer text-[13px] text-slate-500 font-medium leading-relaxed">Our nearest expert mechanic will reach your live location within 15 to 30 minutes.</p>
+                    </div>
+
+                    <!-- FAQ 2 -->
+                    <div class="premium-ui-card rounded-[1.4rem] p-4 faq-item cursor-pointer" onclick="toggleFaq(this)">
+                        <div class="flex justify-between items-center gap-2">
+                            <p id="lang-q2" class="font-bold text-[14px] text-slate-800 tracking-tight">Are there any hidden charges?</p>
+                            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform duration-300 faq-icon"></i>
+                        </div>
+                        <p id="lang-a2" class="faq-answer text-[13px] text-slate-500 font-medium leading-relaxed">No hidden fees at all. You only pay for the service you booked and any spare parts used.</p>
+                    </div>
+
+                    <!-- FAQ 3 -->
+                    <div class="premium-ui-card rounded-[1.4rem] p-4 faq-item cursor-pointer" onclick="toggleFaq(this)">
+                        <div class="flex justify-between items-center gap-2">
+                            <p id="lang-q3" class="font-bold text-[14px] text-slate-800 tracking-tight">What payment methods are supported?</p>
+                            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform duration-300 faq-icon"></i>
+                        </div>
+                        <p id="lang-a3" class="faq-answer text-[13px] text-slate-500 font-medium leading-relaxed">We accept Google Pay, PhonePe, Paytm, Credit/Debit cards, and Cash after service completion.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 🌟 NEW: TRUST BADGE FOOTER (अधिकृत लूकसाठी) -->
+            <div class="text-center mt-8 py-2 reveal-animate delay-3 opacity-60">
+                <div class="flex items-center justify-center gap-2 text-slate-400 font-bold text-[11px] uppercase tracking-widest">
+                    <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
+                    <span>100% Secured RideFix Care Support</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- SECOND STATE: PROFESSIONAL GRAPHIC CARD -->
+        <div id="help-graphic-card" class="w-full premium-ui-card rounded-[2.5rem] p-6 text-center mt-4">
+            <div class="w-16 h-16 bg-gradient-to-tr from-emerald-500 to-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-md shadow-emerald-500/10 rotate-3">
+                <i data-lucide="shield-check" class="w-8 h-8 text-white stroke-[2.5]"></i>
+            </div>
+
+            <h3 id="lang-card-title" class="text-xl font-black tracking-tight mb-4 text-emerald-600">RideFix Care Executive</h3>
+            
+            <div class="bg-slate-50 border border-slate-100 rounded-2xl p-5 mb-6">
+                <p id="lang-card-msg" class="text-[14px] text-slate-700 font-bold leading-relaxed text-center">
+                    We are providing you with our customer care number. Please contact them and explain your problem, they will solve all your problems instantly.
+                </p>
+            </div>
+
+            <a 
+                href="tel:+919270223055" 
+                class="w-full bg-black text-white font-black text-[15px] py-4 rounded-[1.4rem] transition duration-200 active:scale-95 flex items-center justify-center gap-2 shadow-md"
+            >
+                <i data-lucide="phone" class="w-5 h-5 fill-white text-white"></i>
+                <span id="lang-btn-call">Call +91 9270223055</span>
+            </a>
+            
+            <p id="lang-card-footer" class="text-[10px] text-slate-400 font-bold mt-4 uppercase tracking-wider">Instant One-Click Connection</p>
+        </div>
+
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <div class="fixed bottom-0 left-0 right-0 max-w-[450px] mx-auto bg-white/70 backdrop-blur-3xl border-t border-slate-100/50 px-8 py-6 flex justify-between items-center z-[1500] rounded-t-[2.8rem]">
+        <a href="home.html" class="flex flex-col items-center text-slate-400">
+            <i data-lucide="home" class="w-6 h-6"></i>
+            <span id="lang-nav-home" class="text-[10px] font-bold mt-1 uppercase">Home</span>
+        </a>
+        <div class="flex flex-col items-center text-slate-400">
+            <i data-lucide="calendar" class="w-6 h-6"></i>
+            <span id="lang-nav-bookings" class="text-[10px] font-bold mt-1 uppercase">Bookings</span>
+        </div>
+        <div class="flex flex-col items-center">
+            <div class="support-btn-main w-12 h-12 rounded-2xl flex items-center justify-center -mt-14 mb-1 border-4 border-[#f2f2f7] active:scale-90 transition duration-300">
+                <i data-lucide="headset" class="w-6 h-6 text-white stroke-[2.5px]"></i>
+            </div>
+            <span id="lang-nav-support" class="text-[10px] font-black uppercase text-black">Support</span>
+        </div>
+        <div class="flex flex-col items-center text-slate-400">
+            <i data-lucide="history" class="w-6 h-6"></i>
+            <span id="lang-nav-history" class="text-[10px] font-bold mt-1 uppercase">History</span>
+        </div>
+        <div class="flex flex-col items-center text-slate-400">
+            <i data-lucide="user" class="w-6 h-6"></i>
+            <span id="lang-nav-profile" class="text-[10px] font-bold mt-1 uppercase">Profile</span>
+        </div>
+    </div>
+
+</div>
+
+<!-- Logic -->
+<script>
+const translations = {
+    mr: {
+        headerTitle: "मदत केंद्र",
+        mainTitle: "काही अडचण येत आहे का?",
+        mainDesc: "आमची प्रीमियम सपोर्ट टीम तुमची समस्या त्वरित सोडवण्यासाठी २४/७ उपलब्ध आहे.",
+        btnHelp: "आम्हाला मदत हवी आहे",
+        faqTitle: "सतत विचारले जाणारे प्रश्न",
+        q1: "मेकॅनिक यायला किती वेळ लागेल?",
+        a1: "आमचा जवळचा तज्ज्ञ मेकॅनिक तुमच्या लाईव्ह लोकेशनवर १५ ते ३० मिनिटांत पोहोचेल.",
+        q2: "काही छुपा खर्च (Hidden Charges) आहे का?",
+        a2: "नाही, कोणताही छुपा खर्च नाही. तुम्ही फक्त बुक केलेल्या सेवेसाठी आणि वापरलेल्या स्पेअर पार्ट्ससाठी पैसे द्याल.",
+        q3: "पेमेंटच्या कोणत्या पद्धती उपलब्ध आहेत?",
+        a3: "आम्ही गुगल पे, फोनपे, पेटीएम, क्रेडिट/डेबिट कार्ड आणि काम झाल्यावर कॅश स्वीकारतो.",
+        cardTitle: "राईडफिक्स केअर एक्झिक्युटिव्ह",
+        cardMsg: "आम्ही तुम्हाला आमच्या傾 कस्टमर केअरचा नंबर देत आहोत, तुम्ही त्यांच्याशी संपर्क साधा आणि तुमची समस्या सांगा, ते तुमची सर्व प्रॉब्लेम्स लगेच सॉल्व्ह करून देतील.",
+        btnCall: "कॉल करा +91 9270223055",
+        cardFooter: "एका क्लिकवर थेट संपर्क",
+        navHome: "मुख्य",
+        navBookings: "बुकिंग",
+        navSupport: "मदत",
+        navHistory: "इतिहास",
+        navProfile: "प्रोफाईल"
+    },
+    en: {
+        headerTitle: "Support Centre",
+        mainTitle: "Facing any issues?",
+        mainDesc: "Our premium support team is available 24/7 to resolve your problems instantly.",
+        btnHelp: "We Need Help",
+        faqTitle: "Frequently Asked Questions",
+        q1: "How much time will the mechanic take to arrive?",
+        a1: "Our nearest expert mechanic will reach your live location within 15 to 30 minutes.",
+        q2: "Are there any hidden charges?",
+        a2: "No hidden fees at all. You only pay for the service you booked and any spare parts used.",
+        q3: "What payment methods are supported?",
+        a3: "We accept Google Pay, PhonePe, Paytm, Credit/Debit cards, and Cash after service completion.",
+        cardTitle: "RideFix Care Executive",
+        cardMsg: "We are providing you with our customer care number. Please contact them and explain your problem, they will solve all your problems instantly.",
+        btnCall: "Call +91 9270223055",
+        cardFooter: "Instant One-Click Connection",
+        navHome: "Home",
+        navBookings: "Bookings",
+        navSupport: "Support",
+        navHistory: "History",
+        navProfile: "Profile"
+    },
+    hi: {
+        headerTitle: "सहायता केंद्र",
+        mainTitle: "कोई समस्या आ रही है?",
+        mainDesc: "हमारी प्रीमियम सपोर्ट टीम आपकी समस्या को तुरंत हल करने के लिए 24/7 उपलब्ध है.",
+        btnHelp: "हमें सहायता चाहिए",
+        faqTitle: "अक्सर पूछे जाने वाले प्रश्न",
+        q1: "मैकेनिक को आने में कितना समय लगेगा?",
+        a1: "हमारा निकटतम विशेषज्ञ मैकेनिक 15 से 30 मिनट के भीतर आपके लाइव लोकेशन पर पहुंच जाएगा.",
+        q2: "क्या कोई छुपा हुआ शुल्क है?",
+        a2: "बिलकुल नहीं। आप केवल बुक की गई सेवा और उपयोग किए गए स्पेयर पार्ट्स के लिए भुगतान करते हैं।",
+        q3: "कौन से पेमेंट तरीके उपलब्ध हैं?",
+        a3: "हम Google Pay, PhonePe, Paytm, क्रेडिट/डेबिट कार्ड और सेवा पूरी होने के बाद नकद स्वीकार करते हैं।",
+        cardTitle: "राइडफिक्स केयर एक्जीक्यूटिव",
+        cardMsg: "हम आपको हमारे कस्टमर केयर का नंबर दे रहे हैं. कृपया उनसे संपर्क करें और अपनी समस्या बताएं, वे आपकी सभी समस्याओं को तुरंत हल कर देंगे.",
+        btnCall: "कॉल करें +91 9270223055",
+        cardFooter: "एक क्लिक में सीधा संपर्क",
+        navHome: "होम",
+        navBookings: "बुकिंग",
+        navSupport: "सहायता",
+        navHistory: "इतिहास",
+        navProfile: "प्रोफाइल"
+    }
+};
+
+function applyLanguage() {
+    let currentLang = localStorage.getItem('lang') || 'en';
+    if (!translations[currentLang]) currentLang = 'en';
+    const t = translations[currentLang];
+
+    document.getElementById('lang-header-title').innerText = t.headerTitle;
+    document.getElementById('lang-main-title').innerText = t.mainTitle;
+    document.getElementById('lang-main-desc').innerText = t.mainDesc;
+    document.getElementById('lang-btn-help').innerText = t.btnHelp;
+    
+    // FAQs Translation
+    document.getElementById('lang-faq-title').innerText = t.faqTitle;
+    document.getElementById('lang-q1').innerText = t.q1;
+    document.getElementById('lang-a1').innerText = t.a1;
+    document.getElementById('lang-q2').innerText = t.q2;
+    document.getElementById('lang-a2').innerText = t.a2;
+    document.getElementById('lang-q3').innerText = t.q3;
+    document.getElementById('lang-a3').innerText = t.a3;
+
+    // Card & Nav
+    document.getElementById('lang-card-title').innerText = t.cardTitle;
+    document.getElementById('lang-card-msg').innerText = t.cardMsg;
+    document.getElementById('lang-btn-call').innerText = t.btnCall;
+    document.getElementById('lang-card-footer').innerText = t.cardFooter;
+    document.getElementById('lang-nav-home').innerText = t.navHome;
+    document.getElementById('lang-nav-bookings').innerText = t.navBookings;
+    document.getElementById('lang-nav-support').innerText = t.navSupport;
+    document.getElementById('lang-nav-history').innerText = t.navHistory;
+    document.getElementById('lang-nav-profile').innerText = t.navProfile;
+    
+    document.documentElement.lang = currentLang;
+}
+
+// FAQ Accordion Function
+function toggleFaq(element) {
+    const isActive = element.classList.contains('active');
+    document.querySelectorAll('.faq-item').forEach(item => item.classList.remove('active'));
+    if(!isActive) {
+        element.classList.add('active');
+    }
+}
+
+function showProfessionalHelp() {
+    const initialState = document.getElementById('initial-state');
+    const graphicCard = document.getElementById('help-graphic-card');
+    
+    initialState.classList.add('animate-fade-out');
+    
+    setTimeout(() => {
+        initialState.style.display = 'none';
+        graphicCard.style.display = 'block';
+        // कार्ड लोड होताना सुद्धा भारी स्प्रिंग इफेक्ट येईल
+        graphicCard.className = "w-full premium-ui-card rounded-[2.5rem] p-6 text-center mt-4 reveal-animate";
+    }, 250);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    applyLanguage();
+    setTimeout(() => { lucide.createIcons(); }, 200);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>RideFix Premium Service</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+
+<style>
+body{
+    font-family:'Plus Jakarta Sans',sans-serif;
+    background:#000;
+    overflow-x:hidden;
+    -webkit-user-select:none;
+    user-select:none;
+}
+
+::-webkit-scrollbar{
+    display:none;
+}
+
+/* iOS ब्लर सिस्टीम */
+#main-content{
+    transition:all 0.5s cubic-bezier(0.2,1,0.2,1);
+}
+
+.blur-content{
+    filter:blur(25px) brightness(0.7);
+    transform:scale(0.96);
+    pointer-events:none;
+}
+
+.ios-header {
+    background: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) 40%, rgba(0,0,0,0.5) 100%);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    height: 187px; 
+    overflow: hidden; 
+}
+
+.logo-font{
+    font-weight:900;
+    letter-spacing:-0.06em;
+}
+
+.search-bg{
+    background:rgba(255,255,255,0.12)!important;
+    color:white;
+    border:0.5px solid rgba(255,255,255,0.2);
+}
+
+.search-bg::placeholder{
+    color:rgba(255,255,255,0.5);
+}
+
+.swiper-pagination-bullet{
+    background:white!important;
+    opacity:0.5;
+    width:5px;
+    height:5px;
+    transition:all .3s cubic-bezier(0.4,0,0.2,1);
+}
+
+.swiper-pagination-bullet-active{
+    opacity:1;
+    width:18px;
+    border-radius:10px;
+    background:#10b981!important;
+}
+
+.banner-overlay{
+    background:linear-gradient(180deg,rgba(0,0,0,0.1) 0%,rgba(0,0,0,0.7) 100%);
+}
+
+.swiper-slide img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.support-btn{
+    background:#000;
+    box-shadow:0 10px 25px rgba(0,0,0,0.2);
+}
+
+@keyframes reveal{
+    from{
+        opacity:0;
+        transform:translateY(20px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+</style>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+import {
+    getFirestore,
+    collection,
+    onSnapshot
+} from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+import { Swiper } from 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.mjs';
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDyAqz5_6-i7xIlPAdMUBhdVCZwV262Prw",
+    authDomain: "ridefix-final.firebaseapp.com",
+    projectId: "ridefix-final",
+    storageBucket: "ridefix-final.firebasestorage.app",
+    messagingSenderId: "175554582400",
+    appId: "1:175554582400:web:f40c9b80354d6963ab1365",
+    measurementId: "G-EMCTJE6773"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+let swiperInstance = null;
+let retryTimeout = null;
+let hasFirstLocation = false;
+
+const translations = {
+    en: {
+        live_loc: "Live Location",
+        search_placeholder: "Search services...",
+        our_services: "Our Services",
+        view_all: "View All",
+        home: "Home",
+        bookings: "Bookings",
+        support: "Support",
+        history: "History",
+        profile: "Profile"
+    },
+    mr: {
+        live_loc: "लाईव्ह लोकेशन",
+        search_placeholder: "सेवा शोधा...",
+        our_services: "आमच्या सेवा",
+        view_all: "सर्व पहा",
+        home: "मुख्य",
+        bookings: "बुकिंग",
+        support: "मदत",
+        history: "इतिहास",
+        profile: "प्रोफाईल"
+    },
+    hi: {
+        live_loc: "लाइव लोकेशन",
+        search_placeholder: "सेवा खोजें...",
+        our_services: "हमारी सेवाएं",
+        view_all: "सभी देखें",
+        home: "होम",
+        bookings: "बुकिंग",
+        support: "सहायता",
+        history: "इतिहास",
+        profile: "प्रोफाइल"
+    }
+};
+
+window.setLanguage = function(lang){
+localStorage.setItem('lang', lang); 
+    const t = translations[lang];
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if(el.tagName === 'INPUT'){
+            el.placeholder = t[key];
+        }else{
+            el.innerText = t[key];
+        }
+    });
+    document.getElementById("lang-menu").classList.add("hidden");
+    document.documentElement.lang = lang;
+};
+
+window.updateLocation = function(){
+    const locText = document.getElementById("location-display");
+    const accuracyText = document.getElementById("accuracy-display");
+
+    if(!navigator.geolocation){
+        locText.innerText = "GPS Not Supported";
+        return;
+    }
+
+    if(retryTimeout) clearTimeout(retryTimeout);
+
+    if(!hasFirstLocation) {
+        locText.innerText = "Searching... ";
+        accuracyText.innerText = "Connecting to GPS...";
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        async(position)=>{
+            const { latitude:lat, longitude:lng, accuracy } = position.coords;
+            try{
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=jsonv2&accept-language=en&lat=${lat}&lon=${lng}`
+                );
+                const data = await response.json();
+                const a = data.address;
+
+                if (!a) {
+                    throw new Error("No address data");
+                }
+
+                let address = [
+                    a.suburb || a.neighbourhood || a.village || a.road,
+                    a.city || a.town || a.county,
+                    a.state
+                ].filter(Boolean).join(", ");
+
+                locText.innerText = address || "Your Location";
+                accuracyText.innerText = `${Math.round(accuracy)}m • ${accuracy <= 20 ? 'Very Accurate' : 'Good Signal'}`;
+                
+                hasFirstLocation = true; 
+                retryTimeout = setTimeout(window.updateLocation, 5000);
+
+            }catch(err){
+                accuracyText.innerText = "Syncing network...";
+                retryTimeout = setTimeout(window.updateLocation, 5000);
+            }
+        },
+        (err)=>{
+            if(err.code === 1) {
+                locText.innerText = "Access Denied";
+                accuracyText.innerText = "Please allow GPS permission.";
+            } else {
+                accuracyText.innerText = "Signal weak. Reconnecting...";
+                retryTimeout = setTimeout(window.updateLocation, 5000);
+            }
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+    );
+};
+
+// PREMIUM BANNERS
+onSnapshot(collection(db,"banners"),(snap)=>{
+    const wrapper = document.getElementById("banner-wrapper");
+    if(!wrapper) return;
+    wrapper.innerHTML = "";
+    let slideCount = 0;
+
+    if(!snap.empty){
+        snap.forEach(doc=>{
+            wrapper.innerHTML += `
+            <div class="swiper-slide relative">
+                <img src="${doc.data().image}">
+                <div class="absolute inset-0 banner-overlay"></div>
+            </div>`;
+            slideCount++;
+        });
+    }
+
+    if(swiperInstance){
+        swiperInstance.destroy(true,true);
+    }
+
+    const shouldLoop = slideCount > 1;
+    swiperInstance = new Swiper('.mySwiper',{
+        loop:shouldLoop,
+        autoplay:shouldLoop ? { delay:2000, disableOnInteraction:false } : false,
+        speed:800,
+        pagination:{ el:'.swiper-pagination', clickable:true },
+        effect:'fade',
+        fadeEffect:{ crossFade:true },
+        observer:true,
+        observeParents:true
+    });
+});
+
+// SERVICES
+let allServices = [];
+onSnapshot(collection(db, "services"), (snapshot) => {
+    allServices = [];    
+    snapshot.forEach((doc) => {    
+        allServices.push(doc.data());    
+    });    
+    renderServices(allServices);
+});
+
+window.renderServices = function(services) {
+    const grid = document.getElementById("services-grid");    
+    if(!grid) return;    
+    grid.innerHTML = "";    
+
+    if(services.length === 0){    
+        grid.innerHTML = `    
+        <div class="col-span-2 text-center py-12">    
+            <p class="text-slate-500 font-black text-sm">No Services Available</p>    
+        </div>`;    
+        return;    
+    }    
+
+    services.forEach((s, index) => {    
+        const image = s.image || "https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=1200&auto=format&fit=crop";    
+        const name = s.name || "RideFix Service";    
+
+        grid.innerHTML += `    
+        <div style="animation: reveal 0.5s cubic-bezier(0,0.5,0.5,1) ${index * 0.05}s forwards; opacity:0;"    
+        class="bg-white rounded-[2.2rem] border border-slate-100 p-2 shadow-sm active:scale-95 transition-all overflow-hidden">    
+            <div class="w-full h-[130px] overflow-hidden rounded-[1.8rem] bg-slate-50">    
+                <img src="${image}" class="w-full h-full object-cover" loading="lazy">    
+            </div>    
+            <p class="text-center font-bold text-[13px] py-4 text-slate-800 tracking-tight">${name}</p>    
+        </div>`;    
+    });
+};
+
+// iOS FLOATING LIVE SEARCH FUNCTION
+window.handleSearch = function(query) {
+    const mainContent = document.getElementById("main-content");    
+    const searchBox = document.getElementById("floating-search-results");    
+
+    if(query.trim().length > 0) {    
+        mainContent.classList.add("blur-content");    
+        searchBox.classList.remove("hidden");    
+        searchBox.innerHTML = "";    
+
+        const filtered = allServices.filter(s =>    
+            (s.name || "").toLowerCase().includes(query.toLowerCase())    
+        );
+
+        if(filtered.length === 0) {
+            searchBox.innerHTML = `
+            <div class="bg-white/80 backdrop-blur-xl text-center p-6 rounded-3xl border border-white/40 shadow-lg w-full">
+                <p class="text-slate-500 font-black text-sm">No Match Found</p>
+            </div>`;
+            return;
+        }
+
+        filtered.forEach((s, i) => {    
+            searchBox.innerHTML += `    
+            <div style="animation: reveal 0.4s cubic-bezier(0.1,0.9,0.2,1) ${i * 0.04}s both"    
+            class="bg-white/80 backdrop-blur-xl flex items-center gap-4 p-4 mb-3 rounded-3xl border border-white/40 shadow-lg w-full">    
+                <img src="${s.image || 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=1200&auto=format&fit=crop'}" class="w-12 h-12 rounded-[1rem] object-cover">    
+                <div class="flex-1">    
+                    <p class="font-black text-slate-900 text-[15px] leading-tight">${s.name}</p>    
+                    <p class="text-[10px] font-bold text-slate-400 uppercase mt-0.5 tracking-wider">RideFix Service</p>    
+                </div>    
+            </div>`;    
+        });    
+    } else {    
+        mainContent.classList.remove("blur-content");    
+        searchBox.classList.add("hidden");    
+    }
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+    window.updateLocation();
+    setTimeout(() => { lucide.createIcons(); }, 500);
+});
+</script>
+</head>
+
+<body class="antialiased">
+<div class="max-w-[450px] mx-auto bg-white min-h-screen shadow-2xl relative">
+
+    <div class="ios-header p-6 fixed top-0 left-0 right-0 z-[1000] max-w-[450px] mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <div class="flex flex-col flex-1">
+                <h1 class="text-3xl logo-font text-white leading-none mb-1.5">
+                    Ride<span class="text-emerald-500">Fix</span>
+                </h1>
+                <div class="flex items-start gap-1.5" onclick="window.updateLocation()">
+                    <div class="flex items-center justify-center bg-emerald-500 p-1 rounded-md mt-0.5">
+                        <i data-lucide="navigation" class="w-2.5 h-2.5 text-white fill-white"></i>
+                    </div>
+                    <div class="flex flex-col flex-1">
+                        <span data-i18n="live_loc" class="text-[10px] font-black text-white/50 uppercase tracking-wider">Live Location</span>
+                        <p id="location-display" class="text-emerald-400 text-[12px] font-black leading-tight truncate pr-2">Searching...</p>
+                        <p id="accuracy-display" class="text-white/40 text-[10px] font-semibold"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2.5 relative">
+                <div class="relative">
+                    <button onclick="document.getElementById('lang-menu').classList.toggle('hidden')"
+                    class="w-11 h-11 flex items-center justify-center bg-white/10 rounded-full border border-white/20">
+                        <i data-lucide="globe" class="w-5 h-5 text-white"></i>
+                    </button>
+                </div>
+                <button class="w-11 h-11 flex items-center justify-center bg-white/10 rounded-full border border-white/20">
+                    <i data-lucide="bell" class="w-5 h-5 text-white"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="relative z-[1100]">
+            <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40"></i>
+            <input 
+                type="text" 
+                data-i18n="search_placeholder" 
+                oninput="handleSearch(this.value)" 
+                placeholder="Search services..." 
+                class="w-full search-bg py-4 pl-12 pr-4 rounded-[1.4rem] outline-none text-[16px] font-semibold">
+        </div>
+    </div>
+
+    <div id="floating-search-results" class="hidden fixed top-[205px] left-1/2 -translate-x-1/2 w-[calc(100%-48px)] max-w-[402px] z-[4500] max-h-[350px] overflow-y-auto px-1"></div>
+
+    <div id="lang-menu" class="hidden fixed top-[75px] right-[calc(50%-150px)] bg-black/95 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-[2rem] w-40 p-2 z-[4000] max-[450px]:right-[70px]">
+        <button onclick="setLanguage('mr')" class="w-full text-left px-5 py-3 hover:bg-white/10 rounded-2xl text-[13px] font-black text-white">मराठी</button>
+        <button onclick="setLanguage('hi')" class="w-full text-left px-5 py-3 hover:bg-white/10 rounded-2xl text-[13px] font-black text-white">हिंदी</button>
+        <button onclick="setLanguage('en')" class="w-full text-left px-5 py-3 hover:bg-white/10 rounded-2xl text-[13px] font-black text-white">English</button>
+    </div>
+
+    <div id="main-content">
+        <div class="relative w-full pt-[190px] bg-black">
+            <div class="swiper mySwiper w-full h-[280px]">
+                <div class="swiper-wrapper" id="banner-wrapper"></div>
+                <div class="swiper-pagination !bottom-5"></div>
+            </div>
+        </div>
+
+        <div class="bg-[#f2f2f7] -mt-8 relative z-20 rounded-t-[2.8rem] pt-10 px-6 pb-32 min-h-screen">
+            <div class="flex justify-between items-center mb-6">
+                <h3 data-i18n="our_services" class="font-black text-2xl text-black">Our Services</h3>
+                <span data-i18n="view_all" class="text-emerald-600 text-[10px] font-bold uppercase tracking-widest">View All</span>
+            </div>
+            <div id="services-grid" class="grid grid-cols-2 gap-5 min-h-[200px]"></div>
+        </div>
+    </div>
+
+    <div class="fixed bottom-0 left-0 right-0 max-w-[450px] mx-auto bg-white/70 backdrop-blur-3xl border-t border-slate-100/50 px-8 py-6 flex justify-between items-center z-[1500] rounded-t-[2.8rem]">
+        <div class="flex flex-col items-center text-black">
+            <i data-lucide="home" class="w-6 h-6 stroke-[2.5px]"></i>
+            <span data-i18n="home" class="text-[10px] font-black mt-1 uppercase">Home</span>
+        </div>
+        <div class="flex flex-col items-center text-slate-400">
+            <i data-lucide="calendar" class="w-6 h-6"></i>
+            <span data-i18n="bookings" class="text-[10px] font-bold mt-1 uppercase">Bookings</span>
+        </div>
+   
+        <a href="support.html" class="flex flex-col items-center cursor-pointer">
+            <div class="support-btn w-12 h-12 rounded-2xl flex items-center justify-center -mt-14 mb-1 border-4 border-[#f2f2f7] shadow-lg active:scale-90 transition duration-300">
+                <i data-lucide="headset" class="w-6 h-6 text-white stroke-[2.5px]"></i>
+            </div>
+            <span data-i18n="support" class="text-[10px] font-bold uppercase text-slate-400">Support</span>
+        </a>
+   
+        <div class="flex flex-col items-center text-slate-400">
+            <i data-lucide="history" class="w-6 h-6"></i>
+            <span data-i18n="history" class="text-[10px] font-bold mt-1 uppercase">History</span>
+        </div>
+        <div class="flex flex-col items-center text-slate-400">
+            <i data-lucide="user" class="w-6 h-6"></i>
+            <span data-i18n="profile" class="text-[10px] font-bold mt-1 uppercase">Profile</span>
+        </div>
+    </div>
+</div>
+</body>
+</html>
