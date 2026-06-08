@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>My Profile - RideFix</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDyAqz5_6-i7xIlPAdMUBhdVCZwV262Prw",
+    authDomain: "ridefix-final.firebaseapp.com",
+    projectId: "ridefix-final",
+    storageBucket: "ridefix-final.firebasestorage.app",
+    messagingSenderId: "175554582400",
+    appId: "1:175554582400:web:f40c9b80354d6963ab1365"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  window._db = db;
+  window._doc = doc;
+  window._getDoc = getDoc;
+  window._updateDoc = updateDoc;
+</script>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: #08090a;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+input, select, button, textarea {
+  touch-action: manipulation;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+::-webkit-scrollbar { display: none; }
+
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(24px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.fade-in-up { animation: fadeInUp 0.5s cubic-bezier(0.16,1,0.3,1) forwards; }
+.delay-1 { animation-delay: 0.1s; opacity: 0; }
+.delay-2 { animation-delay: 0.2s; opacity: 0; }
+.delay-3 { animation-delay: 0.3s; opacity: 0; }
+.delay-4 { animation-delay: 0.4s; opacity: 0; }
+
+/* Header */
+.profile-header {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  padding: 60px 24px 80px;
+  position: relative;
+  overflow: hidden;
+}
+.profile-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 60% 40%, rgba(16,185,129,0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+.profile-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: #08090a;
+  clip-path: ellipse(55% 100% at 50% 100%);
+}
+
+/* Photo */
+.photo-container {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 16px;
+}
+.profile-photo {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #10b981;
+  box-shadow: 0 0 0 4px rgba(16,185,129,0.15), 0 0 30px rgba(16,185,129,0.3);
+}
+.online-dot {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 16px;
+  height: 16px;
+  background: #10b981;
+  border-radius: 50%;
+  border: 2px solid #08090a;
+  box-shadow: 0 0 8px rgba(16,185,129,0.8);
+}
+.edit-photo-btn {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 32px;
+  height: 32px;
+  background: #10b981;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #08090a;
+  cursor: pointer;
+}
+
+/* Info Card */
+.info-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 12px;
+}
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.info-row:last-child { border-bottom: none; padding-bottom: 0; }
+.info-row:first-child { padding-top: 0; }
+
+.info-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(16,185,129,0.1);
+  border: 1px solid rgba(16,185,129,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Bike Card */
+.bike-card {
+  background: linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(16,185,129,0.03) 100%);
+  border: 1px solid rgba(16,185,129,0.2);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 12px;
+  position: relative;
+  overflow: hidden;
+}
+.bike-card::before {
+  content: '🏍️';
+  position: absolute;
+  right: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 80px;
+  opacity: 0.06;
+}
+
+/* Action Buttons */
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+  width: 100%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+  margin-bottom: 8px;
+}
+.action-btn:active { transform: scale(0.98); background: rgba(255,255,255,0.05); }
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px;
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 16px;
+  width: 100%;
+  cursor: pointer;
+  touch-action: manipulation;
+  margin-top: 8px;
+}
+.logout-btn:active { transform: scale(0.98); }
+
+/* Section Title */
+.section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin: 20px 0 10px;
+  padding-left: 4px;
+}
+
+/* Back Button */
+.back-btn {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  z-index: 10;
+}
+
+/* Settings Button */
+.settings-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  z-index: 10;
+}
+
+/* Loading overlay */
+#loading-screen {
+  position: fixed;
+  inset: 0;
+  background: #08090a;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+/* Edit Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.show { opacity: 1; pointer-events: all; }
+.modal-box {
+  background: #111318;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 24px 24px 0 0;
+  padding: 24px 20px 40px;
+  width: 100%;
+  max-width: 440px;
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+.modal-overlay.show .modal-box { transform: translateY(0); }
+.modal-input {
+  width: 100%;
+  padding: 14px 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  outline: none;
+  margin-bottom: 12px;
+}
+.modal-input:focus {
+  border-color: #10b981;
+  background: rgba(16,185,129,0.05);
+}
+</style>
+</head>
+
+<body>
+
+<!-- Loading -->
+<div id="loading-screen">
+  <div style="width:48px;height:48px;border:3px solid rgba(16,185,129,0.2);border-top-color:#10b981;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+  <p style="color:rgba(255,255,255,0.4);font-size:13px;font-weight:600;">Loading profile...</p>
+</div>
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+
+<!-- Main Content -->
+<div id="main-content" style="display:none;max-width:440px;margin:0 auto;min-height:100vh;">
+
+  <!-- Header -->
+  <div class="profile-header">
+    <!-- Back -->
+    <div class="back-btn" onclick="window.history.back()">
+      <i data-lucide="arrow-left" style="width:18px;height:18px;color:white;"></i>
+    </div>
+
+    <!-- Settings -->
+    <div class="settings-btn" onclick="window.location.href='settings.html'">
+      <i data-lucide="settings" style="width:18px;height:18px;color:white;"></i>
+    </div>
+
+    <!-- Photo & Name -->
+    <div style="text-align:center;position:relative;z-index:1;">
+      <div class="photo-container fade-in-up">
+        <img id="user-photo" src="https://ui-avatars.com/api/?name=U&background=1e293b&color=10b981&size=200&bold=true&rounded=true"
+          class="profile-photo" alt="Profile">
+        <div class="online-dot"></div>
+        <div class="edit-photo-btn" onclick="alert('Photo upload coming soon!')">
+          <i data-lucide="camera" style="width:14px;height:14px;color:white;"></i>
+        </div>
+      </div>
+
+      <h1 id="user-name" class="fade-in-up delay-1"
+        style="font-size:22px;font-weight:900;color:white;letter-spacing:-0.03em;margin-bottom:4px;">
+        Loading...
+      </h1>
+
+      <div id="user-phone" class="fade-in-up delay-2"
+        style="display:inline-flex;align-items:center;gap:6px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:100px;padding:4px 12px;">
+        <i data-lucide="smartphone" style="width:12px;height:12px;color:#10b981;"></i>
+        <span style="font-size:12px;font-weight:700;color:#10b981;">Loading...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div style="padding:0 20px 100px;margin-top:-20px;">
+
+    <!-- Bike Card -->
+    <div class="bike-card fade-in-up delay-2">
+      <p style="font-size:10px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:8px;">My Bike</p>
+      <p id="bike-info" style="font-size:20px;font-weight:900;color:white;letter-spacing:-0.02em;">Loading...</p>
+      <p id="bike-number" style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.4);margin-top:4px;">— No plate added</p>
+    </div>
+
+    <!-- Location Info -->
+    <p class="section-title">📍 Location</p>
+    <div class="info-card fade-in-up delay-3">
+      <div class="info-row">
+        <div class="info-icon">
+          <i data-lucide="map-pin" style="width:16px;height:16px;color:#10b981;"></i>
+        </div>
+        <div>
+          <p style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">District</p>
+          <p id="user-district" style="font-size:14px;font-weight:700;color:white;">—</p>
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon">
+          <i data-lucide="navigation" style="width:16px;height:16px;color:#10b981;"></i>
+        </div>
+        <div>
+          <p style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">Taluka</p>
+          <p id="user-taluka" style="font-size:14px;font-weight:700;color:white;">—</p>
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon">
+          <i data-lucide="home" style="width:16px;height:16px;color:#10b981;"></i>
+        </div>
+        <div>
+          <p style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">Village / Town</p>
+          <p id="user-village" style="font-size:14px;font-weight:700;color:white;">—</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <p class="section-title">⚡ Quick Actions</p>
+
+    <!-- Edit Profile Button - आता settings ला न जाता इथेच edit होईल -->
+    <button class="action-btn fade-in-up delay-3" onclick="openEditModal()">
+      <div class="info-icon">
+        <i data-lucide="edit-3" style="width:16px;height:16px;color:#10b981;"></i>
+      </div>
+      <div style="flex:1;text-align:left;">
+        <p style="font-size:14px;font-weight:700;color:white;">Edit Profile</p>
+        <p style="font-size:11px;color:rgba(255,255,255,0.4);font-weight:600;">Change name, bike & location</p>
+      </div>
+      <i data-lucide="chevron-right" style="width:16px;height:16px;color:rgba(255,255,255,0.3);"></i>
+    </button>
+
+    <button class="action-btn fade-in-up delay-4" onclick="window.location.href='settings.html'">
+      <div class="info-icon">
+        <i data-lucide="settings" style="width:16px;height:16px;color:#10b981;"></i>
+      </div>
+      <div style="flex:1;text-align:left;">
+        <p style="font-size:14px;font-weight:700;color:white;">Settings</p>
+        <p style="font-size:11px;color:rgba(255,255,255,0.4);font-weight:600;">Notifications & more</p>
+      </div>
+      <i data-lucide="chevron-right" style="width:16px;height:16px;color:rgba(255,255,255,0.3);"></i>
+    </button>
+
+    <!-- Logout -->
+    <button class="logout-btn fade-in-up delay-4" onclick="confirmLogout()">
+      <i data-lucide="log-out" style="width:18px;height:18px;color:#ef4444;"></i>
+      <span style="font-size:14px;font-weight:800;color:#ef4444;">Logout</span>
+    </button>
+
+    <p style="text-align:center;font-size:10px;color:rgba(255,255,255,0.1);font-weight:700;text-transform:uppercase;letter-spacing:0.15em;margin-top:20px;">
+      RideFix v1.0 • Premium Vehicle Care
+    </p>
+  </div>
+</div>
+
+<!-- EDIT PROFILE MODAL -->
+<div class="modal-overlay" id="edit-modal" onclick="closeModal('edit-modal')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div style="width:40px;height:4px;background:rgba(255,255,255,0.1);border-radius:100px;margin:0 auto 20px;"></div>
+    <h3 style="font-size:18px;font-weight:900;color:white;margin-bottom:6px;">Edit Profile ✏️</h3>
+    <p style="font-size:12px;color:rgba(255,255,255,0.4);font-weight:600;margin-bottom:20px;">Update your details</p>
+
+    <input type="text" id="edit-name" class="modal-input" placeholder="Full Name">
+    <input type="text" id="edit-bike-company" class="modal-input" placeholder="Bike Company (e.g. Honda)">
+    <input type="text" id="edit-bike-model" class="modal-input" placeholder="Bike Model (e.g. Shine)">
+    <input type="text" id="edit-bike-number" class="modal-input" placeholder="Bike Number (e.g. MH12AB1234)">
+    <input type="text" id="edit-district" class="modal-input" placeholder="District">
+    <input type="text" id="edit-taluka" class="modal-input" placeholder="Taluka">
+    <input type="text" id="edit-village" class="modal-input" placeholder="Village / Town">
+
+    <button onclick="updateProfile()"
+      style="width:100%;margin-top:16px;background:#10b981;color:black;font-weight:900;padding:15px;border-radius:14px;font-size:14px;border:none;cursor:pointer;touch-action:manipulation;">
+      SAVE CHANGES ✓
+    </button>
+  </div>
+</div>
+
+<script>
+let currentUserData = {};
+let currentPhone = null;
+
+async function loadProfile() {
+  currentPhone = localStorage.getItem('ridefix_phone');
+
+  if (!currentPhone) {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  try {
+    const docRef = window._doc(window._db, "users", currentPhone);
+    const docSnap = await window._getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    currentUserData = docSnap.data();
+
+    // Photo
+    if (currentUserData.photoURL) {
+      document.getElementById('user-photo').src = currentUserData.photoURL;
+    }
+
+    // Name
+    document.getElementById('user-name').innerText = currentUserData.name || 'User';
+
+    // Phone
+    document.getElementById('user-phone').querySelector('span').innerText = currentUserData.phone || '+91' + currentPhone;
+
+    // Bike
+    const bikeText = (currentUserData.bikeCompany || '') + ' ' + (currentUserData.bikeModel || '');
+    document.getElementById('bike-info').innerText = bikeText.trim() || 'No bike added';
+    document.getElementById('bike-number').innerText = currentUserData.bikeNumber ? '🔖 ' + currentUserData.bikeNumber : '— No plate added';
+
+    // Location
+    document.getElementById('user-district').innerText = currentUserData.district || '—';
+    document.getElementById('user-taluka').innerText = currentUserData.taluka || '—';
+    document.getElementById('user-village').innerText = currentUserData.village || '—';
+
+    // Loading hide, content show
+    document.getElementById('loading-screen').style.display = 'none';
+    document.getElementById('main-content').style.display = 'block';
+
+    setTimeout(() => lucide.createIcons(), 50);
+
+  } catch(err) {
+    console.error(err);
+    window.location.href = 'login.html';
+  }
+}
+
+// Open Edit Modal
+window.openEditModal = function() {
+  document.getElementById('edit-name').value = currentUserData.name || '';
+  document.getElementById('edit-bike-company').value = currentUserData.bikeCompany || '';
+  document.getElementById('edit-bike-model').value = currentUserData.bikeModel || '';
+  document.getElementById('edit-bike-number').value = currentUserData.bikeNumber || '';
+  document.getElementById('edit-district').value = currentUserData.district || '';
+  document.getElementById('edit-taluka').value = currentUserData.taluka || '';
+  document.getElementById('edit-village').value = currentUserData.village || '';
+  
+  document.getElementById('edit-modal').classList.add('show');
+  setTimeout(() => lucide.createIcons(), 50);
+};
+
+// Update Profile
+window.updateProfile = async function() {
+  if (!currentPhone) return;
+
+  const updateData = {
+    name: document.getElementById('edit-name').value,
+    bikeCompany: document.getElementById('edit-bike-company').value,
+    bikeModel: document.getElementById('edit-bike-model').value,
+    bikeNumber: document.getElementById('edit-bike-number').value,
+    district: document.getElementById('edit-district').value,
+    taluka: document.getElementById('edit-taluka').value,
+    village: document.getElementById('edit-village').value
+  };
+
+  try {
+    const docRef = window._doc(window._db, "users", currentPhone);
+    await window._updateDoc(docRef, updateData);
+    
+    // Update local data
+    Object.assign(currentUserData, updateData);
+    
+    // Refresh UI
+    document.getElementById('user-name').innerText = updateData.name || 'User';
+    const bikeText = (updateData.bikeCompany || '') + ' ' + (updateData.bikeModel || '');
+    document.getElementById('bike-info').innerText = bikeText.trim() || 'No bike added';
+    document.getElementById('bike-number').innerText = updateData.bikeNumber ? '🔖 ' + updateData.bikeNumber : '— No plate added';
+    document.getElementById('user-district').innerText = updateData.district || '—';
+    document.getElementById('user-taluka').innerText = updateData.taluka || '—';
+    document.getElementById('user-village').innerText = updateData.village || '—';
+    
+    alert("✓ Profile updated successfully!");
+    closeModal('edit-modal');
+    
+  } catch(err) {
+    alert("✕ Failed to update. Try again.");
+    console.error(err);
+  }
+};
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+function confirmLogout() {
+  if (confirm("Are you sure you want to logout?")) {
+    localStorage.removeItem('ridefix_phone');
+    window.location.href = 'login.html';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => lucide.createIcons(), 100);
+  loadProfile();
+});
+</script>
+</body>
+</html>

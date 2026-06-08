@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Settings - RideFix</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDyAqz5_6-i7xIlPAdMUBhdVCZwV262Prw",
+    authDomain: "ridefix-final.firebaseapp.com",
+    projectId: "ridefix-final",
+    storageBucket: "ridefix-final.firebasestorage.app",
+    messagingSenderId: "175554582400",
+    appId: "1:175554582400:web:f40c9b80354d6963ab1365"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  window._db = db;
+  window._doc = doc;
+  window._getDoc = getDoc;
+  window._deleteDoc = deleteDoc;
+</script>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: #08090a;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+input, select, button { touch-action: manipulation; font-family: 'Plus Jakarta Sans', sans-serif; }
+::-webkit-scrollbar { display: none; }
+
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fadeInUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards; }
+.d1 { animation-delay: 0.05s; opacity: 0; }
+.d2 { animation-delay: 0.1s; opacity: 0; }
+.d3 { animation-delay: 0.15s; opacity: 0; }
+.d4 { animation-delay: 0.2s; opacity: 0; }
+.d5 { animation-delay: 0.25s; opacity: 0; }
+.d6 { animation-delay: 0.3s; opacity: 0; }
+
+/* Header */
+.top-header {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  padding: 56px 20px 28px;
+  position: relative;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.back-btn {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  width: 38px; height: 38px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+
+/* Section */
+.section-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.25);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  padding: 20px 20px 8px;
+}
+
+/* Row */
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 15px 20px;
+  background: rgba(255,255,255,0.02);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 0.2s;
+}
+.settings-row:active { background: rgba(255,255,255,0.05); }
+.settings-row:first-of-type { border-top: 1px solid rgba(255,255,255,0.04); }
+
+.row-icon {
+  width: 38px; height: 38px;
+  border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.row-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  flex: 1;
+}
+.row-sub {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.35);
+  margin-top: 2px;
+}
+
+/* Toggle */
+.toggle-wrap {
+  width: 44px; height: 24px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 100px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.3s;
+  flex-shrink: 0;
+}
+.toggle-wrap.on { background: #10b981; }
+.toggle-knob {
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 18px; height: 18px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.toggle-wrap.on .toggle-knob { transform: translateX(20px); }
+
+/* Danger */
+.danger-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 15px 20px;
+  background: rgba(239,68,68,0.04);
+  border-bottom: 1px solid rgba(239,68,68,0.08);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 0.2s;
+}
+.danger-row:active { background: rgba(239,68,68,0.08); }
+.danger-row:first-of-type { border-top: 1px solid rgba(239,68,68,0.08); }
+
+/* Version badge */
+.version-badge {
+  margin: 24px 20px;
+  padding: 16px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.show { opacity: 1; pointer-events: all; }
+.modal-box {
+  background: #111318;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 24px 24px 0 0;
+  padding: 24px 20px 40px;
+  width: 100%;
+  max-width: 440px;
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+.modal-overlay.show .modal-box { transform: translateY(0); }
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="top-header fade-in">
+  <div class="back-btn" onclick="window.history.back()">
+    <i data-lucide="arrow-left" style="width:18px;height:18px;color:white;"></i>
+  </div>
+  <h1 style="font-size:22px;font-weight:900;color:white;letter-spacing:-0.03em;">
+    Settings <span style="color:#10b981;">⚙️</span>
+  </h1>
+  <p style="font-size:12px;color:rgba(255,255,255,0.35);font-weight:600;margin-top:3px;">
+    Manage your preferences
+  </p>
+</div>
+
+<div style="max-width:440px;margin:0 auto;padding-bottom:60px;">
+
+  <!-- NOTIFICATIONS -->
+  <p class="section-label fade-in d1">🔔 Notifications</p>
+
+  <div class="settings-row fade-in d1" onclick="toggleOffers()">
+    <div class="row-icon" style="background:rgba(251,191,36,0.1);">
+      <i data-lucide="tag" style="width:17px;height:17px;color:#fbbf24;"></i>
+    </div>
+    <div style="flex:1;">
+      <p class="row-title">Offer Alerts</p>
+      <p class="row-sub">Get notified about deals & discounts</p>
+    </div>
+    <div class="toggle-wrap on" id="toggle-offers">
+      <div class="toggle-knob"></div>
+    </div>
+  </div>
+
+  <!-- SUPPORT -->
+  <p class="section-label fade-in d2">🆘 Support</p>
+
+  <div class="settings-row fade-in d2" onclick="openContact()">
+    <div class="row-icon" style="background:rgba(16,185,129,0.1);">
+      <i data-lucide="message-circle" style="width:17px;height:17px;color:#10b981;"></i>
+    </div>
+    <div style="flex:1;">
+      <p class="row-title">Contact Us</p>
+      <p class="row-sub">We're here to help you</p>
+    </div>
+    <i data-lucide="chevron-right" style="width:16px;height:16px;color:rgba(255,255,255,0.2);"></i>
+  </div>
+
+  <div class="settings-row fade-in d2" onclick="openReport()">
+    <div class="row-icon" style="background:rgba(251,191,36,0.1);">
+      <i data-lucide="flag" style="width:17px;height:17px;color:#fbbf24;"></i>
+    </div>
+    <div style="flex:1;">
+      <p class="row-title">Report a Problem</p>
+      <p class="row-sub">Tell us what went wrong</p>
+    </div>
+    <i data-lucide="chevron-right" style="width:16px;height:16px;color:rgba(255,255,255,0.2);"></i>
+  </div>
+
+  <div class="settings-row fade-in d3" onclick="rateApp()">
+    <div class="row-icon" style="background:rgba(251,146,60,0.1);">
+      <i data-lucide="star" style="width:17px;height:17px;color:#fb923c;"></i>
+    </div>
+    <div style="flex:1;">
+      <p class="row-title">Rate RideFix</p>
+      <p class="row-sub">Love the app? Give us a 5 ⭐</p>
+    </div>
+    <i data-lucide="chevron-right" style="width:16px;height:16px;color:rgba(255,255,255,0.2);"></i>
+  </div>
+
+  <!-- ACCOUNT -->
+  <p class="section-label fade-in d4">🔒 Account</p>
+
+  <div class="danger-row fade-in d4" onclick="confirmLogout()">
+    <div class="row-icon" style="background:rgba(239,68,68,0.1);">
+      <i data-lucide="log-out" style="width:17px;height:17px;color:#ef4444;"></i>
+    </div>
+    <div style="flex:1;">
+      <p style="font-size:14px;font-weight:700;color:#ef4444;">Logout</p>
+      <p class="row-sub">Sign out from your account</p>
+    </div>
+    <i data-lucide="chevron-right" style="width:16px;height:16px;color:rgba(239,68,68,0.2);"></i>
+  </div>
+
+  <div class="danger-row fade-in d4" onclick="confirmDelete()">
+    <div class="row-icon" style="background:rgba(239,68,68,0.1);">
+      <i data-lucide="trash-2" style="width:17px;height:17px;color:#ef4444;"></i>
+    </div>
+    <div style="flex:1;">
+      <p style="font-size:14px;font-weight:700;color:#ef4444;">Delete Account</p>
+      <p class="row-sub">Permanently remove your data</p>
+    </div>
+    <i data-lucide="chevron-right" style="width:16px;height:16px;color:rgba(239,68,68,0.2);"></i>
+  </div>
+
+  <!-- VERSION -->
+  <div class="version-badge fade-in d5">
+    <div>
+      <p style="font-size:13px;font-weight:700;color:white;">RideFix</p>
+      <p style="font-size:11px;color:rgba(255,255,255,0.3);font-weight:600;">Premium Vehicle Care</p>
+    </div>
+    <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:100px;padding:4px 12px;">
+      <p style="font-size:11px;font-weight:700;color:#10b981;">v1.0.0</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- CONTACT MODAL -->
+<div class="modal-overlay" id="contact-modal" onclick="closeModal('contact-modal')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div style="width:40px;height:4px;background:rgba(255,255,255,0.1);border-radius:100px;margin:0 auto 20px;"></div>
+    <h3 style="font-size:18px;font-weight:900;color:white;margin-bottom:6px;">Contact Us 💬</h3>
+    <p style="font-size:12px;color:rgba(255,255,255,0.4);font-weight:600;margin-bottom:20px;">We typically reply within 24 hours</p>
+
+    <a href="mailto:support@ridefix.in"
+      style="display:flex;align-items:center;gap:14px;padding:16px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:16px;margin-bottom:10px;text-decoration:none;">
+      <div class="row-icon" style="background:rgba(16,185,129,0.15);">
+        <i data-lucide="mail" style="width:17px;height:17px;color:#10b981;"></i>
+      </div>
+      <div>
+        <p style="font-size:13px;font-weight:700;color:white;">Email Support</p>
+        <p style="font-size:11px;color:#10b981;font-weight:600;">RideFixSupport@gmail.com</p>
+      </div>
+    </a>
+
+    <a href="https://wa.me/919145455474"
+      style="display:flex;align-items:center;gap:14px;padding:16px;background:rgba(37,211,102,0.06);border:1px solid rgba(37,211,102,0.2);border-radius:16px;text-decoration:none;">
+      <div class="row-icon" style="background:rgba(37,211,102,0.12);">
+        <i data-lucide="message-circle" style="width:17px;height:17px;color:#25d366;"></i>
+      </div>
+      <div>
+        <p style="font-size:13px;font-weight:700;color:white;">WhatsApp</p>
+        <p style="font-size:11px;color:#25d366;font-weight:600;">Chat with us directly</p>
+      </div>
+    </a>
+  </div>
+</div>
+
+<!-- REPORT MODAL -->
+<div class="modal-overlay" id="report-modal" onclick="closeModal('report-modal')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div style="width:40px;height:4px;background:rgba(255,255,255,0.1);border-radius:100px;margin:0 auto 20px;"></div>
+    <h3 style="font-size:18px;font-weight:900;color:white;margin-bottom:6px;">Report a Problem 🐛</h3>
+    <p style="font-size:12px;color:rgba(255,255,255,0.4);font-weight:600;margin-bottom:16px;">Describe the issue you're facing</p>
+
+    <textarea id="report-text" placeholder="e.g. App is crashing when I open profile..."
+      style="width:100%;height:120px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px;color:white;font-size:13px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;resize:none;outline:none;-webkit-user-select:text;user-select:text;"></textarea>
+
+    <button onclick="submitReport()"
+      style="width:100%;margin-top:12px;background:#10b981;color:black;font-weight:900;padding:15px;border-radius:14px;font-size:14px;border:none;cursor:pointer;touch-action:manipulation;">
+      SEND REPORT ✓
+    </button>
+  </div>
+</div>
+
+<script>
+// ===== TOGGLE OFFERS =====
+let offersOn = true;
+function toggleOffers() {
+  offersOn = !offersOn;
+  const el = document.getElementById('toggle-offers');
+  offersOn ? el.classList.add('on') : el.classList.remove('on');
+  localStorage.setItem('ridefix_offers', offersOn ? '1' : '0');
+}
+
+// ===== MODAL =====
+function openContact() {
+  document.getElementById('contact-modal').classList.add('show');
+}
+function openReport() {
+  document.getElementById('report-modal').classList.add('show');
+  setTimeout(() => lucide.createIcons(), 50);
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+// ===== REPORT =====
+function submitReport() {
+  const text = document.getElementById('report-text').value.trim();
+  if (!text) { alert("Please describe the problem."); return; }
+  alert("✓ Report submitted! Thank you.");
+  closeModal('report-modal');
+  document.getElementById('report-text').value = '';
+}
+
+// ===== RATE =====
+function rateApp() {
+  alert("⭐ Thank you for rating RideFix!");
+}
+
+// ===== LOGOUT =====
+function confirmLogout() {
+  if (confirm("Are you sure you want to logout?")) {
+    localStorage.removeItem('ridefix_phone');
+    window.location.href = 'login2.html';
+  }
+}
+
+// ===== DELETE ACCOUNT =====
+async function confirmDelete() {
+  const phone = localStorage.getItem('ridefix_phone');
+  if (!phone) { window.location.href = 'login2.html'; return; }
+
+  if (confirm("⚠️ Delete your account permanently? This cannot be undone!")) {
+    try {
+      const db = window._db;
+      await window._deleteDoc(window._doc(db, "users", phone));
+      localStorage.removeItem('ridefix_phone');
+      alert("✓ Account deleted successfully.");
+      window.location.href = 'login2.html';
+    } catch(err) {
+      alert("✕ Failed to delete. Try again.");
+      console.error(err);
+    }
+  }
+}
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  // Offers toggle restore
+  const saved = localStorage.getItem('ridefix_offers');
+  if (saved === '0') {
+    offersOn = false;
+    document.getElementById('toggle-offers').classList.remove('on');
+  }
+  setTimeout(() => lucide.createIcons(), 100);
+});
+</script>
+</body>
+</html>

@@ -24,7 +24,6 @@ body{
     display:none;
 }
 
-/* iOS ब्लर सिस्टीम */
 #main-content{
     transition:all 0.5s cubic-bezier(0.2,1,0.2,1);
 }
@@ -39,8 +38,8 @@ body{
     background: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) 40%, rgba(0,0,0,0.5) 100%);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
-    height: 187px; 
-    overflow: hidden; 
+    height: 187px;
+    overflow: hidden;
 }
 
 .logo-font{
@@ -56,6 +55,37 @@ body{
 
 .search-bg::placeholder{
     color:rgba(255,255,255,0.5);
+}
+
+.search-container {
+    position: relative;
+    width: 100%;
+}
+
+.search-clear-btn {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.2);
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+.search-clear-btn:active {
+    transform: translateY(-50%) scale(0.9);
+    background: rgba(255,255,255,0.4);
 }
 
 .swiper-pagination-bullet{
@@ -98,6 +128,31 @@ body{
         transform:translateY(0);
     }
 }
+
+/* POPULAR बॅज स्टाईल */
+.popular-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    font-size: 9px;
+    font-weight: 900;
+    padding: 3px 8px;
+    border-radius: 20px;
+    z-index: 15;
+    box-shadow: 0 2px 8px rgba(239,68,68,0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* बॉक्सवर hover effect */
+.service-box {
+    transition: transform 0.2s ease;
+}
+.service-box:active {
+    transform: scale(0.98);
+}
 </style>
 
 <script type="module">
@@ -105,7 +160,9 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebas
 import {
     getFirestore,
     collection,
-    onSnapshot
+    onSnapshot,
+    query,
+    orderBy
 } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
 import { Swiper } from 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.mjs';
 
@@ -124,57 +181,6 @@ const db = getFirestore(app);
 let swiperInstance = null;
 let retryTimeout = null;
 let hasFirstLocation = false;
-
-const translations = {
-    en: {
-        live_loc: "Live Location",
-        search_placeholder: "Search services...",
-        our_services: "Our Services",
-        view_all: "View All",
-        home: "Home",
-        bookings: "Bookings",
-        support: "Support",
-        history: "History",
-        profile: "Profile"
-    },
-    mr: {
-        live_loc: "लाईव्ह लोकेशन",
-        search_placeholder: "सेवा शोधा...",
-        our_services: "आमच्या सेवा",
-        view_all: "सर्व पहा",
-        home: "मुख्य",
-        bookings: "बुकिंग",
-        support: "मदत",
-        history: "इतिहास",
-        profile: "प्रोफाईल"
-    },
-    hi: {
-        live_loc: "लाइव लोकेशन",
-        search_placeholder: "सेवा खोजें...",
-        our_services: "हमारी सेवाएं",
-        view_all: "सभी देखें",
-        home: "होम",
-        bookings: "बुकिंग",
-        support: "सहायता",
-        history: "इतिहास",
-        profile: "प्रोफाइल"
-    }
-};
-
-window.setLanguage = function(lang){
-localStorage.setItem('lang', lang); 
-    const t = translations[lang];
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if(el.tagName === 'INPUT'){
-            el.placeholder = t[key];
-        }else{
-            el.innerText = t[key];
-        }
-    });
-    document.getElementById("lang-menu").classList.add("hidden");
-    document.documentElement.lang = lang;
-};
 
 window.updateLocation = function(){
     const locText = document.getElementById("location-display");
@@ -214,8 +220,8 @@ window.updateLocation = function(){
 
                 locText.innerText = address || "Your Location";
                 accuracyText.innerText = `${Math.round(accuracy)}m • ${accuracy <= 20 ? 'Very Accurate' : 'Good Signal'}`;
-                
-                hasFirstLocation = true; 
+
+                hasFirstLocation = true;
                 retryTimeout = setTimeout(window.updateLocation, 5000);
 
             }catch(err){
@@ -271,56 +277,122 @@ onSnapshot(collection(db,"banners"),(snap)=>{
     });
 });
 
-// SERVICES
+// SERVICES - with ORDER BY position
 let allServices = [];
-onSnapshot(collection(db, "services"), (snapshot) => {
-    allServices = [];    
-    snapshot.forEach((doc) => {    
-        allServices.push(doc.data());    
-    });    
+const servicesQuery = query(collection(db, "services"), orderBy("position", "asc"));
+onSnapshot(servicesQuery, (snapshot) => {
+    allServices = [];
+    snapshot.forEach((doc) => {
+        allServices.push(doc.data());
+    });
     renderServices(allServices);
 });
 
 window.renderServices = function(services) {
-    const grid = document.getElementById("services-grid");    
-    if(!grid) return;    
-    grid.innerHTML = "";    
+    const grid = document.getElementById("services-grid");
+    if(!grid) return;
+    grid.innerHTML = "";
 
-    if(services.length === 0){    
-        grid.innerHTML = `    
-        <div class="col-span-2 text-center py-12">    
-            <p class="text-slate-500 font-black text-sm">No Services Available</p>    
-        </div>`;    
-        return;    
-    }    
+    if(services.length === 0){
+        grid.innerHTML = `
+        <div class="text-center py-12">
+            <p class="text-slate-500 font-black text-sm">No Services Available</p>
+        </div>`;
+        return;
+    }
 
-    services.forEach((s, index) => {    
-        const image = s.image || "https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=1200&auto=format&fit=crop";    
-        const name = s.name || "RideFix Service";    
+    services.forEach((s, index) => {
+        const image = s.image || "https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=1200&auto=format&fit=crop";
+        const name = s.name || "RideFix Service";
+        
+        // वेगवेगळ्या services साठी वेगवेगळ्या लिंक्स
+        let linkUrl = '';
+        const nameLower = name.toLowerCase();
+        let isBreakdown = false;
 
-        grid.innerHTML += `    
-        <div style="animation: reveal 0.5s cubic-bezier(0,0.5,0.5,1) ${index * 0.05}s forwards; opacity:0;"    
-        class="bg-white rounded-[2.2rem] border border-slate-100 p-2 shadow-sm active:scale-95 transition-all overflow-hidden">    
-            <div class="w-full h-[130px] overflow-hidden rounded-[1.8rem] bg-slate-50">    
-                <img src="${image}" class="w-full h-full object-cover" loading="lazy">    
-            </div>    
-            <p class="text-center font-bold text-[13px] py-4 text-slate-800 tracking-tight">${name}</p>    
-        </div>`;    
+        if(nameLower.includes('breakdown') || nameLower.includes('emergency') || nameLower.includes('roadside')) {
+            linkUrl = 'service2.html';
+            isBreakdown = true;
+        } 
+        else if(nameLower.includes('pickup') || nameLower.includes('drop') || nameLower.includes('workshop')) {
+            linkUrl = 'service3.html';
+        }
+        else {
+            linkUrl = `service${index + 1}.html`;
+        }
+
+        // POPULAR बॅज फक्त breakdown service साठी
+        const popularBadge = isBreakdown ? '<div class="popular-badge">🔥 POPULAR</div>' : '';
+
+        grid.innerHTML += `
+        <div style="animation: reveal 0.5s cubic-bezier(0,0.5,0.5,1) ${index * 0.05}s forwards; opacity:0; height: 45vw; max-height: 220px;"
+        class="relative w-full rounded-[2rem] overflow-hidden active:scale-[0.98] transition-all shadow-md service-box">
+            ${popularBadge}
+            <img src="${image}" class="w-full h-full object-cover" loading="lazy">
+            <div style="background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.1) 60%, transparent 100%);"
+            class="absolute inset-0"></div>
+            <p class="absolute bottom-3 left-4 font-black text-[14px] text-white tracking-tight leading-tight">${name}</p>
+            <button onclick="window.location.href='${linkUrl}'" 
+            class="absolute bottom-3 right-3 bg-emerald-500 text-white px-4 py-1.5 rounded-full text-xs font-bold active:scale-95 transition-all shadow-lg z-10">
+                Get Service
+            </button>
+        </div>`;
     });
 };
 
-// iOS FLOATING LIVE SEARCH FUNCTION
+// Search Result वर क्लिक केल्यावर service page उघडण्यासाठी फंक्शन
+window.searchResultClick = function(serviceName, serviceImage) {
+    const nameLower = serviceName.toLowerCase();
+    let linkUrl = '';
+    
+    if(nameLower.includes('breakdown') || nameLower.includes('emergency') || nameLower.includes('roadside')) {
+        linkUrl = 'service2.html';
+    } 
+    else if(nameLower.includes('pickup') || nameLower.includes('drop') || nameLower.includes('workshop')) {
+        linkUrl = 'service3.html';
+    }
+    else {
+        const serviceIndex = allServices.findIndex(s => s.name === serviceName);
+        if(serviceIndex !== -1) {
+            linkUrl = `service${serviceIndex + 1}.html`;
+        } else {
+            linkUrl = 'service1.html';
+        }
+    }
+    
+    window.location.href = linkUrl;
+};
+
+// Search Clear Function
+window.clearSearch = function() {
+    const searchInput = document.getElementById('search-input');
+    searchInput.value = '';
+    handleSearch('');
+    searchInput.focus();
+};
+
+// iOS FLOATING LIVE SEARCH FUNCTION - 3 अक्षरांची अट
 window.handleSearch = function(query) {
-    const mainContent = document.getElementById("main-content");    
-    const searchBox = document.getElementById("floating-search-results");    
+    const mainContent = document.getElementById("main-content");
+    const searchBox = document.getElementById("floating-search-results");
+    const clearBtn = document.getElementById('search-clear-btn');
+    const trimmedQuery = query.trim();
 
-    if(query.trim().length > 0) {    
-        mainContent.classList.add("blur-content");    
-        searchBox.classList.remove("hidden");    
-        searchBox.innerHTML = "";    
+    if(trimmedQuery.length < 3) {
+        mainContent.classList.remove("blur-content");
+        searchBox.classList.add("hidden");
+        if(clearBtn) clearBtn.style.display = 'none';
+        return;
+    }
 
-        const filtered = allServices.filter(s =>    
-            (s.name || "").toLowerCase().includes(query.toLowerCase())    
+    if(trimmedQuery.length >= 3) {
+        mainContent.classList.add("blur-content");
+        searchBox.classList.remove("hidden");
+        if(clearBtn) clearBtn.style.display = 'flex';
+        searchBox.innerHTML = "";
+
+        const filtered = allServices.filter(s =>
+            (s.name || "").toLowerCase().includes(trimmedQuery.toLowerCase())
         );
 
         if(filtered.length === 0) {
@@ -331,20 +403,21 @@ window.handleSearch = function(query) {
             return;
         }
 
-        filtered.forEach((s, i) => {    
-            searchBox.innerHTML += `    
-            <div style="animation: reveal 0.4s cubic-bezier(0.1,0.9,0.2,1) ${i * 0.04}s both"    
-            class="bg-white/80 backdrop-blur-xl flex items-center gap-4 p-4 mb-3 rounded-3xl border border-white/40 shadow-lg w-full">    
-                <img src="${s.image || 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=1200&auto=format&fit=crop'}" class="w-12 h-12 rounded-[1rem] object-cover">    
-                <div class="flex-1">    
-                    <p class="font-black text-slate-900 text-[15px] leading-tight">${s.name}</p>    
-                    <p class="text-[10px] font-bold text-slate-400 uppercase mt-0.5 tracking-wider">RideFix Service</p>    
-                </div>    
-            </div>`;    
-        });    
-    } else {    
-        mainContent.classList.remove("blur-content");    
-        searchBox.classList.add("hidden");    
+        filtered.forEach((s, i) => {
+            searchBox.innerHTML += `
+            <div onclick="searchResultClick('${s.name.replace(/'/g, "\\'")}', '${s.image}')" 
+            style="animation: reveal 0.4s cubic-bezier(0.1,0.9,0.2,1) ${i * 0.04}s both; cursor: pointer;"
+            class="bg-white/80 backdrop-blur-xl flex items-center gap-4 p-4 mb-3 rounded-3xl border border-white/40 shadow-lg w-full active:scale-98 transition-all">
+                <img src="${s.image || 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=1200&auto=format&fit=crop'}" class="w-12 h-12 rounded-[1rem] object-cover">
+                <div class="flex-1">
+                    <p class="font-black text-slate-900 text-[15px] leading-tight">${s.name}</p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase mt-0.5 tracking-wider">RideFix Service</p>
+                </div>
+                <i data-lucide="arrow-right" class="w-4 h-4 text-emerald-500"></i>
+            </div>`;
+        });
+        
+        setTimeout(() => lucide.createIcons(), 50);
     }
 };
 
@@ -356,7 +429,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </head>
 
 <body class="antialiased">
-<div class="max-w-[450px] mx-auto bg-white min-h-screen shadow-2xl relative">
+<div class="max-w-[450px] mx-auto bg-white min-h-screen shadow-2xl relative" style="padding-bottom: 0;">
 
     <div class="ios-header p-6 fixed top-0 left-0 right-0 z-[1000] max-w-[450px] mx-auto">
         <div class="flex justify-between items-center mb-6">
@@ -369,7 +442,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <i data-lucide="navigation" class="w-2.5 h-2.5 text-white fill-white"></i>
                     </div>
                     <div class="flex flex-col flex-1">
-                        <span data-i18n="live_loc" class="text-[10px] font-black text-white/50 uppercase tracking-wider">Live Location</span>
+                        <span class="text-[10px] font-black text-white/50 uppercase tracking-wider">Live Location</span>
                         <p id="location-display" class="text-emerald-400 text-[12px] font-black leading-tight truncate pr-2">Searching...</p>
                         <p id="accuracy-display" class="text-white/40 text-[10px] font-semibold"></p>
                     </div>
@@ -377,36 +450,27 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
 
             <div class="flex items-center gap-2.5 relative">
-                <div class="relative">
-                    <button onclick="document.getElementById('lang-menu').classList.toggle('hidden')"
-                    class="w-11 h-11 flex items-center justify-center bg-white/10 rounded-full border border-white/20">
-                        <i data-lucide="globe" class="w-5 h-5 text-white"></i>
-                    </button>
-                </div>
                 <button class="w-11 h-11 flex items-center justify-center bg-white/10 rounded-full border border-white/20">
                     <i data-lucide="bell" class="w-5 h-5 text-white"></i>
                 </button>
             </div>
         </div>
 
-        <div class="relative z-[1100]">
-            <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40"></i>
-            <input 
-                type="text" 
-                data-i18n="search_placeholder" 
-                oninput="handleSearch(this.value)" 
-                placeholder="Search services..." 
-                class="w-full search-bg py-4 pl-12 pr-4 rounded-[1.4rem] outline-none text-[16px] font-semibold">
+        <div class="relative z-[1100] search-container">
+            <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40 z-10"></i>
+            <input
+                id="search-input"
+                type="text"
+                oninput="handleSearch(this.value)"
+                placeholder="Search services..."
+                class="w-full search-bg py-4 pl-12 pr-12 rounded-[1.4rem] outline-none text-[16px] font-semibold">
+            <button id="search-clear-btn" onclick="clearSearch()" class="search-clear-btn" style="display: none;">
+                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+            </button>
         </div>
     </div>
 
     <div id="floating-search-results" class="hidden fixed top-[205px] left-1/2 -translate-x-1/2 w-[calc(100%-48px)] max-w-[402px] z-[4500] max-h-[350px] overflow-y-auto px-1"></div>
-
-    <div id="lang-menu" class="hidden fixed top-[75px] right-[calc(50%-150px)] bg-black/95 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-[2rem] w-40 p-2 z-[4000] max-[450px]:right-[70px]">
-        <button onclick="setLanguage('mr')" class="w-full text-left px-5 py-3 hover:bg-white/10 rounded-2xl text-[13px] font-black text-white">मराठी</button>
-        <button onclick="setLanguage('hi')" class="w-full text-left px-5 py-3 hover:bg-white/10 rounded-2xl text-[13px] font-black text-white">हिंदी</button>
-        <button onclick="setLanguage('en')" class="w-full text-left px-5 py-3 hover:bg-white/10 rounded-2xl text-[13px] font-black text-white">English</button>
-    </div>
 
     <div id="main-content">
         <div class="relative w-full pt-[190px] bg-black">
@@ -418,38 +482,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
         <div class="bg-[#f2f2f7] -mt-8 relative z-20 rounded-t-[2.8rem] pt-10 px-6 pb-32 min-h-screen">
             <div class="flex justify-between items-center mb-6">
-                <h3 data-i18n="our_services" class="font-black text-2xl text-black">Our Services</h3>
-                <span data-i18n="view_all" class="text-emerald-600 text-[10px] font-bold uppercase tracking-widest">View All</span>
+                <h3 class="font-black text-2xl text-black">Our Services</h3>
+                <span class="text-emerald-600 text-[10px] font-bold uppercase tracking-widest">View All</span>
             </div>
-            <div id="services-grid" class="grid grid-cols-2 gap-5 min-h-[200px]"></div>
+            <div id="services-grid" class="flex flex-col gap-4 min-h-[200px]"></div>
         </div>
     </div>
 
+    <!-- Bottom Navigation -->
     <div class="fixed bottom-0 left-0 right-0 max-w-[450px] mx-auto bg-white/70 backdrop-blur-3xl border-t border-slate-100/50 px-8 py-6 flex justify-between items-center z-[1500] rounded-t-[2.8rem]">
         <div class="flex flex-col items-center text-black">
             <i data-lucide="home" class="w-6 h-6 stroke-[2.5px]"></i>
-            <span data-i18n="home" class="text-[10px] font-black mt-1 uppercase">Home</span>
+            <span class="text-[10px] font-black mt-1 uppercase">Home</span>
         </div>
         <div class="flex flex-col items-center text-slate-400">
             <i data-lucide="calendar" class="w-6 h-6"></i>
-            <span data-i18n="bookings" class="text-[10px] font-bold mt-1 uppercase">Bookings</span>
+            <span class="text-[10px] font-bold mt-1 uppercase">Bookings</span>
         </div>
-   
+
         <a href="support.html" class="flex flex-col items-center cursor-pointer">
             <div class="support-btn w-12 h-12 rounded-2xl flex items-center justify-center -mt-14 mb-1 border-4 border-[#f2f2f7] shadow-lg active:scale-90 transition duration-300">
                 <i data-lucide="headset" class="w-6 h-6 text-white stroke-[2.5px]"></i>
             </div>
-            <span data-i18n="support" class="text-[10px] font-bold uppercase text-slate-400">Support</span>
+            <span class="text-[10px] font-bold uppercase text-slate-400">Support</span>
         </a>
-   
+
         <div class="flex flex-col items-center text-slate-400">
             <i data-lucide="history" class="w-6 h-6"></i>
-            <span data-i18n="history" class="text-[10px] font-bold mt-1 uppercase">History</span>
+            <span class="text-[10px] font-bold mt-1 uppercase">History</span>
         </div>
-        <div class="flex flex-col items-center text-slate-400">
+
+        <a href="profile.html" class="flex flex-col items-center text-slate-400 cursor-pointer active:scale-95 transition">
             <i data-lucide="user" class="w-6 h-6"></i>
-            <span data-i18n="profile" class="text-[10px] font-bold mt-1 uppercase">Profile</span>
-        </div>
+            <span class="text-[10px] font-bold mt-1 uppercase">Profile</span>
+        </a>
     </div>
 </div>
 </body>

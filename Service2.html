@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Breakdown Service - RideFix</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDyAqz5_6-i7xIlPAdMUBhdVCZwV262Prw",
+    authDomain: "ridefix-final.firebaseapp.com",
+    projectId: "ridefix-final",
+    storageBucket: "ridefix-final.firebasestorage.app",
+    messagingSenderId: "175554582400",
+    appId: "1:175554582400:web:f40c9b80354d6963ab1365"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  async function loadService() {
+    try {
+      const q = query(collection(db, "services"), orderBy("position", "asc"));
+      const snapshot = await getDocs(q);
+      let services = [];
+      snapshot.forEach(doc => services.push(doc.data()));
+      
+      if (services.length >= 2) {
+        const service = services[1];
+        document.getElementById('service-name').innerText = service.name || "Breakdown Service";
+        document.getElementById('service-category').innerText = "24/7 EMERGENCY ASSISTANCE";
+        document.getElementById('service-image').src = service.image || "https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=1200&auto=format&fit=crop";
+        document.getElementById('service-price').innerText = service.price || "99";
+        document.getElementById('service-description').innerHTML = service.description || "24/7 roadside assistance. Minor repairs on-site. Major repairs: tow to workshop + free home delivery.";
+      }
+      document.getElementById('loading-screen').style.display = 'none';
+      document.getElementById('main-content').style.display = 'block';
+      setTimeout(() => lucide.createIcons(), 100);
+    } catch(e) { console.error(e); }
+  }
+  
+  window.bookService = function() {
+    const phone = localStorage.getItem('ridefix_phone');
+    if (!phone) { if(confirm("Please login to book this service?")) window.location.href='login2.html'; return; }
+    window.location.href = 'booking.html';
+  };
+  
+  document.addEventListener('DOMContentLoaded', loadService);
+</script>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: #08090a;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+img, .hero-image {
+  pointer-events: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.hero-section {
+  position: relative;
+  height: 320px;
+  width: 100%;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.5) 70%, #08090a 100%);
+}
+
+.back-btn {
+  position: absolute;
+  top: 50px;
+  left: 20px;
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.service-title {
+  position: absolute;
+  bottom: 80px;
+  left: 20px;
+  right: 20px;
+  z-index: 10;
+  text-align: center;
+}
+
+.service-name {
+  font-size: 28px;
+  font-weight: 900;
+  color: white;
+  letter-spacing: -0.02em;
+}
+
+.service-category {
+  display: inline-block;
+  background: rgba(239,68,68,0.2);
+  backdrop-filter: blur(10px);
+  padding: 6px 16px;
+  border-radius: 100px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #ef4444;
+  margin-top: 10px;
+}
+
+.logo-badge {
+  position: absolute;
+  top: 50px;
+  right: 20px;
+  z-index: 10;
+  background: rgba(0,0,0,0.3);
+  backdrop-filter: blur(10px);
+  padding: 8px 16px;
+  border-radius: 100px;
+}
+
+.logo-badge h1 {
+  font-size: 20px;
+  font-weight: 900;
+  color: white;
+}
+
+.logo-badge span {
+  color: #ef4444;
+}
+
+.content-card {
+  background: #08090a;
+  margin-top: -30px;
+  border-radius: 30px 30px 0 0;
+  padding: 24px 20px;
+  position: relative;
+  z-index: 5;
+}
+
+/* LIVE TRACKING INFO BOX - Only English */
+.live-info-box {
+  background: linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(239,68,68,0.05) 100%);
+  border: 1px solid rgba(239,68,68,0.25);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.live-info-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.live-info-header i {
+  color: #ef4444;
+}
+
+.live-info-header span {
+  font-size: 14px;
+  font-weight: 800;
+  color: #ef4444;
+  letter-spacing: 0.5px;
+}
+
+.live-info-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.7);
+  line-height: 1.5;
+}
+
+.live-info-text strong {
+  color: #10b981;
+}
+
+.flow-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 20px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.flow-number {
+  width: 36px;
+  height: 36px;
+  background: rgba(239,68,68,0.15);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 900;
+  color: #ef4444;
+}
+
+.flow-text h4 {
+  font-size: 14px;
+  font-weight: 800;
+  color: white;
+}
+
+.flow-text p {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+}
+
+.info-section {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-icon {
+  width: 40px;
+  height: 40px;
+  background: rgba(239,68,68,0.1);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.info-icon i {
+  color: #ef4444;
+}
+
+.info-label {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.info-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  margin-top: 2px;
+}
+
+.price-tag {
+  background: linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(239,68,68,0.05) 100%);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.price-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+}
+
+.price-amount {
+  font-size: 32px;
+  font-weight: 900;
+  color: #ef4444;
+}
+
+.description-box {
+  background: rgba(255,255,255,0.02);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.description-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.7);
+  line-height: 1.5;
+}
+
+.payment-alert {
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.15);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.payment-alert p {
+  font-size: 11px;
+  font-weight: 700;
+  color: #ef4444;
+}
+
+.book-btn {
+  width: 100%;
+  background: #ef4444;
+  border: none;
+  padding: 18px;
+  border-radius: 18px;
+  font-size: 16px;
+  font-weight: 900;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
+.book-btn:active {
+  transform: scale(0.97);
+  background: #dc2626;
+}
+
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  background: #08090a;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(239,68,68,0.2);
+  border-top-color: #ef4444;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+</style>
+</head>
+<body>
+
+<div id="loading-screen" class="loading-screen">
+  <div class="spinner"></div>
+  <p>Loading breakdown service...</p>
+</div>
+
+<div id="main-content" style="display:none;">
+  <div class="hero-section">
+    <img id="service-image" class="hero-image" src="" alt="Breakdown Service">
+    <div class="hero-overlay"></div>
+    <div class="back-btn" onclick="window.history.back()">
+      <i data-lucide="arrow-left" style="width:20px;height:20px;color:white;"></i>
+    </div>
+    <div class="logo-badge">
+      <h1>Ride<span>Fix</span></h1>
+    </div>
+    <div class="service-title">
+      <h1 id="service-name" class="service-name">Loading...</h1>
+      <span id="service-category" class="service-category">EMERGENCY ASSISTANCE</span>
+    </div>
+  </div>
+  <div class="content-card">
+    
+    <!-- LIVE TRACKING INFO - Only English -->
+    <div class="live-info-box">
+      <div class="live-info-header">
+        <i data-lucide="eye" style="width: 22px; height: 22px;"></i>
+        <span>🔴 LIVE TRACKING AVAILABLE</span>
+      </div>
+      <p class="live-info-text">
+        ✅ If your vehicle requires major repair that cannot be done on the spot, we will tow it to our workshop.<br>
+        🔴 You can watch your vehicle's repair <strong>LIVE</strong> from our workshop camera!
+      </p>
+    </div>
+
+    <div class="flow-card">
+      <div class="flow-number">1</div>
+      <div class="flow-text">
+        <h4>We Reach Your Location</h4>
+        <p>Wherever your vehicle is stranded, our mechanic will reach you ASAP</p>
+      </div>
+    </div>
+    <div class="flow-card">
+      <div class="flow-number">2</div>
+      <div class="flow-text">
+        <h4>On-Site Repair (If Possible)</h4>
+        <p>If the issue is minor, we fix it right there at the spot</p>
+      </div>
+    </div>
+    <div class="flow-card">
+      <div class="flow-number">3</div>
+      <div class="flow-text">
+        <h4>Workshop Repair + Free Drop</h4>
+        <p>If major repair needed, we tow to workshop, fix it, and deliver back to your home</p>
+      </div>
+    </div>
+    
+    <div class="info-section">
+      <div class="info-row">
+        <div class="info-icon"><i data-lucide="clock" style="width:18px;height:18px;"></i></div>
+        <div><p class="info-label">Response Time</p><p class="info-value">Immediate</p></div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon"><i data-lucide="shield-check" style="width:18px;height:18px;"></i></div>
+        <div><p class="info-label">Service Guarantee</p><p class="info-value">7 Days Warranty</p></div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon"><i data-lucide="users" style="width:18px;height:18px;"></i></div>
+        <div><p class="info-label">Expert Technicians</p><p class="info-value">Certified & Experienced</p></div>
+      </div>
+    </div>
+    
+    <div class="price-tag">
+      <span class="price-label">Service Booking Charges</span>
+      <span class="price-amount"><small>₹</small> <span id="service-price">99</span></span>
+    </div>
+    
+    <div class="description-box">
+      <p id="service-description" class="description-text">Loading...</p>
+    </div>
+    
+    <div class="payment-alert">
+      <i data-lucide="credit-card" style="width:18px;height:18px;"></i>
+      <p>⚠️ ONLY ONLINE PAYMENT ACCEPTED! Cash not accepted.</p>
+    </div>
+    
+    <button class="book-btn" onclick="bookService()">
+      <i data-lucide="phone" style="width:20px;height:20px;"></i> REQUEST BREAKDOWN HELP
+    </button>
+    
+    <p style="text-align:center;font-size:10px;color:rgba(255,255,255,0.15);margin-top:16px;">RideFix Emergency • 24/7 • Live Workshop Tracking Available</p>
+  </div>
+</div>
+</body>
+</html>

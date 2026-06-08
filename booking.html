@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Booking - RideFix</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#08090a;font-family:'Plus Jakarta Sans',sans-serif;}
+
+.header{background:linear-gradient(135deg,#0f172a,#1e293b);padding:50px 24px 30px;}
+.back-btn{position:absolute;top:50px;left:20px;width:36px;height:36px;background:rgba(255,255,255,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:20px;padding:18px;margin-bottom:14px;}
+.price-box{background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(16,185,129,0.05));border:1px solid rgba(16,185,129,0.2);border-radius:20px;padding:20px;text-align:center;margin-bottom:20px;}
+.payment-btn{width:100%;background:#10b981;border:none;padding:18px;border-radius:18px;font-size:18px;font-weight:900;color:black;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;}
+.info-note{background:rgba(16,185,129,0.08);border-left:3px solid #10b981;padding:14px;border-radius:12px;margin-top:16px;}
+</style>
+</head>
+<body>
+
+<div class="max-w-[450px] mx-auto bg-black min-h-screen">
+  
+  <!-- Header -->
+  <div class="header">
+    <div class="back-btn" onclick="window.location.href='index.html'">
+      <i data-lucide="arrow-left" style="width:18px;height:18px;color:white;"></i>
+    </div>
+    <h1 class="text-2xl font-black text-white text-center">Book Service</h1>
+    <p class="text-white/40 text-xs text-center mt-1">Complete your booking</p>
+  </div>
+
+  <div class="p-5 pb-24">
+
+    <!-- Selected Service -->
+    <div class="card">
+      <div class="flex justify-between items-center">
+        <div class="flex gap-3 items-center">
+          <div class="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center">
+            <i data-lucide="wrench" style="width:18px;height:18px;color:#10b981;"></i>
+          </div>
+          <div>
+            <p class="text-white/50 text-[10px]">Selected Service</p>
+            <p id="serviceName" class="text-white font-bold text-sm">Doorstep Service</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Price Box - ₹99 -->
+    <div class="price-box">
+      <p class="text-white/50 text-xs mb-2">Booking Amount</p>
+      <h1 class="text-5xl font-black text-emerald-400">₹99</h1>
+      <p class="text-white/30 text-[10px] mt-2">Inclusive of all taxes</p>
+    </div>
+
+    <!-- Booking Summary -->
+    <div class="card">
+      <p class="text-white/60 text-xs mb-3 flex items-center gap-2"><i data-lucide="check-circle" style="width:14px;height:14px;color:#10b981;"></i> Service Confirmed</p>
+      <p class="text-white/60 text-xs mb-3 flex items-center gap-2"><i data-lucide="clock" style="width:14px;height:14px;color:#10b981;"></i> 30-45 mins response time</p>
+      <p class="text-white/60 text-xs flex items-center gap-2"><i data-lucide="shield" style="width:14px;height:14px;color:#10b981;"></i> 7 days service warranty</p>
+    </div>
+
+    <!-- Agent Contact Note -->
+    <div class="info-note">
+      <div class="flex items-center gap-2 mb-2">
+        <i data-lucide="headphones" style="width:16px;height:16px;color:#10b981;"></i>
+        <span class="text-emerald-400 font-bold text-xs">Agent will contact you</span>
+      </div>
+      <p class="text-white/60 text-xs leading-relaxed">✅ Service book होताच, आमचे agent तुमच्याशी contact करतील. तुमच्या सोयीनुसार mechanic schedule केला जाईल.</p>
+    </div>
+
+    <!-- Payment Now Button -->
+    <button class="payment-btn" onclick="processPayment()">
+      <i data-lucide="credit-card" style="width:18px;height:18px;"></i>
+      PAY ₹99 & BOOK NOW
+    </button>
+
+    <!-- Payment Options Note -->
+    <p class="text-center text-white/20 text-[9px] mt-4">🔒 Secured Payment • UPI • Card • NetBanking</p>
+  </div>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDyAqz5_6-i7xIlPAdMUBhdVCZwV262Prw",
+  authDomain: "ridefix-final.firebaseapp.com",
+  databaseURL: "https://ridefix-final-default-rtdb.firebaseio.com",
+  projectId: "ridefix-final",
+  storageBucket: "ridefix-final.firebasestorage.app",
+  messagingSenderId: "175554582400",
+  appId: "1:175554582400:web:f40c9b80354d6963ab1365"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let selectedService = JSON.parse(localStorage.getItem('selected_service') || '{}');
+let userPhone = localStorage.getItem('ridefix_phone');
+
+document.getElementById('serviceName').innerHTML = selectedService.name || 'Doorstep Service';
+
+if(!userPhone) {
+  document.querySelector('.payment-btn').innerHTML = 'LOGIN TO BOOK';
+  document.querySelector('.payment-btn').onclick = () => window.location.href = 'login2.html';
+}
+
+function processPayment() {
+  if(!userPhone) { alert("Please login first"); window.location.href='login2.html'; return; }
+  
+  // Save booking to Firebase
+  let booking = {
+    service: selectedService.name || 'Doorstep Service',
+    amount: 99,
+    status: 'pending',
+    userPhone: userPhone,
+    timestamp: Date.now(),
+    agentAssigned: false
+  };
+  
+  db.ref('bookings/' + userPhone).push(booking).then(() => {
+    alert("✅ Service Booked Successfully!\n\n📞 Agent will contact you shortly.");
+    window.location.href = 'index.html';
+  }).catch(() => alert("Booking failed. Try again."));
+}
+
+setTimeout(() => lucide.createIcons(), 100);
+</script>
+</body>
+</html>
