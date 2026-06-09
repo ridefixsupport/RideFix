@@ -55,25 +55,13 @@ button {
 
 ::-webkit-scrollbar { display: none; }
 
-@keyframes logoGlowPulse {
-  0%, 100% { text-shadow: 0 0 15px rgba(16,185,129,0.2); transform: scale(0.95); opacity: 0; }
-  50% { text-shadow: 0 0 30px rgba(16,185,129,0.8); transform: scale(1.05); opacity: 1; }
-}
-.animate-intro-logo { animation: logoGlowPulse 2.5s cubic-bezier(0.25,1,0.5,1) infinite; }
-
-@keyframes fadeOutScreen {
-  0% { opacity: 1; visibility: visible; }
-  100% { opacity: 0; visibility: hidden; pointer-events: none; }
-}
-.hide-splash { animation: fadeOutScreen 0.8s cubic-bezier(0.25,1,0.5,1) forwards; }
-
 @keyframes slideDownPhoto {
   0% { transform: translateY(-100%); opacity: 0; }
   100% { transform: translateY(0); opacity: 1; }
 }
 .animate-slide-down-photo {
   animation: slideDownPhoto 1.5s cubic-bezier(0.16,1,0.3,1) forwards;
-  animation-delay: 2.8s; opacity: 0;
+  opacity: 0;
 }
 
 @keyframes fadeInForm {
@@ -82,25 +70,14 @@ button {
 }
 .animate-fade-in-form {
   animation: fadeInForm 1.5s cubic-bezier(0.16,1,0.3,1) forwards;
-  animation-delay: 3s; opacity: 0;
+  opacity: 0;
 }
-
-@keyframes slideInUp {
-  0% { opacity: 0; transform: translateY(30px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-.slide-in-up { animation: slideInUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards; }
 
 @keyframes neonPulse {
   0%, 100% { box-shadow: 0 0 10px rgba(16,185,129,0.15); }
   50% { box-shadow: 0 0 22px rgba(16,185,129,0.4); }
 }
 .animate-pulse-btn { animation: neonPulse 3s ease-in-out infinite; }
-
-@keyframes left-to-right {
-  0% { left: -50%; }
-  100% { left: 100%; }
-}
 
 /* LOGIN SCREEN */
 #screen-login {
@@ -210,17 +187,6 @@ select.glass-input {
 </head>
 
 <body>
-
-<!-- SPLASH -->
-<div id="splash-screen" class="fixed inset-0 bg-[#08090a] z-50 flex flex-col items-center justify-center gap-4">
-  <h1 class="text-5xl font-[900] tracking-[-0.06em] text-white animate-intro-logo">
-    Ride<span class="text-emerald-400">Fix</span>
-  </h1>
-  <p class="text-slate-500 text-xs font-bold uppercase tracking-[0.3em] opacity-80">Premium Vehicle Care</p>
-  <div class="w-24 h-[2px] bg-slate-800 rounded-full mt-4 overflow-hidden relative">
-    <div class="absolute h-full w-1/2 bg-emerald-400 rounded-full animate-[left-to-right_1.5s_ease-in-out_infinite]"></div>
-  </div>
-</div>
 
 <!-- ========== LOGIN SCREEN ========== -->
 <div id="screen-login">
@@ -437,7 +403,7 @@ const maharashtraData = {
   "Thane": ["Thane","Ambarnath","Bhiwandi","Kalyan","Murbad","Shahapur","Ulhasnagar"],
   "Wardha": ["Wardha","Arvi","Ashti","Deoli","Hinganghat","Karanja","Samudrapur","Seloo"],
   "Washim": ["Washim","Karanja","Malegaon","Mangrulpir","Manora","Risod"],
-  "Yavatmal": ["Yavatmal","Arni","Babulgaon","Darwha","Digras","Ghatanji","Kalamb","Kelapur","Mahagaaon","Darwha","Digras","Ghatanji","Kalamb","Kelapur","Mahagaon","Maregaon","Ner","Pusad","Ralegaon","Umarkhed","Wani","Zari Jamani"]
+  "Yavatmal": ["Yavatmal","Arni","Babulgaon","Darwha","Digras","Ghatanji","Kalamb","Kelapur","Mahagaaon","Maregaon","Ner","Pusad","Ralegaon","Umarkhed","Wani","Zari Jamani"]
 };
 
 const bikeData = {
@@ -753,11 +719,8 @@ async function completeProfile() {
   }
 }
 
-// ===== SPLASH =====
+// ===== REMOVED SPLASH ANIMATION =====
 document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(() => {
-    document.getElementById('splash-screen').classList.add('hide-splash');
-  }, 3000);
   setTimeout(() => lucide.createIcons(), 150);
 });
 </script>
