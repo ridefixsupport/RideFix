@@ -1,0 +1,441 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080d0b">
+<title>RideFix | Secure Payment</title>
+
+<style>
+:root {
+  --green: #00e59b;
+  --bg: #080d0b;
+  --card: #111916;
+  --border: #25352e;
+  --muted: #91a098;
+  --white: #f5faf7;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: Inter, system-ui, Arial, sans-serif;
+  background:
+    radial-gradient(ellipse at top, #123025 0%, transparent 45%),
+    var(--bg);
+  color: var(--white);
+  min-height: 100vh;
+  padding: 22px 15px 35px;
+}
+.container { width: 100%; max-width: 450px; margin: auto; }
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 5px 0 26px;
+}
+.brand { display: flex; align-items: center; gap: 11px; }
+.logo {
+  width: 45px; height: 45px; border-radius: 14px;
+  display: grid; place-items: center;
+  background: var(--green); color: #062117;
+  font-size: 23px; font-weight: 900;
+}
+.brand h1 { font-size: 22px; letter-spacing: -.8px; }
+.brand h1 span { color: var(--green); }
+.brand p { color: var(--muted); font-size: 11px; margin-top: 3px; }
+.secure {
+  border: 1px solid var(--border); border-radius: 20px;
+  padding: 8px 10px; color: var(--green); font-size: 10px;
+  display: flex; align-items: center; gap: 5px;
+}
+
+.heading { margin-bottom: 20px; }
+.heading h2 { font-size: 25px; letter-spacing: -.6px; }
+.heading p { color: var(--muted); font-size: 13px; margin-top: 7px; }
+
+.card {
+  background: linear-gradient(145deg, #131d18, #0e1411);
+  border: 1px solid var(--border);
+  border-radius: 21px;
+  padding: 20px;
+  margin-bottom: 15px;
+  box-shadow: 0 12px 30px #00000012;
+}
+.card-title {
+  font-size: 14px; font-weight: 700;
+  margin-bottom: 18px;
+  display: flex; align-items: center; gap: 9px;
+}
+.card-title .number {
+  width: 27px; height: 27px; border-radius: 9px;
+  display: grid; place-items: center;
+  color: var(--green); background: #123426; font-size: 12px;
+}
+.amount-label { color: var(--muted); font-size: 12px; }
+.amount {
+  color: var(--green); font-size: 35px; font-weight: 800;
+  margin: 5px 0 16px; letter-spacing: -1px;
+  overflow-wrap: anywhere;
+}
+.row {
+  display: flex; justify-content: space-between; gap: 12px;
+  border-top: 1px solid var(--border); padding: 12px 0;
+  font-size: 12px;
+}
+.row:last-child { padding-bottom: 0; }
+.row .label { color: var(--muted); }
+.row .value { text-align: right; overflow-wrap: anywhere; max-width: 65%; }
+
+.qr-shell {
+  width: 225px; max-width: 100%; margin: 0 auto;
+  padding: 12px; background: white; border-radius: 17px;
+  box-shadow: 0 0 0 6px #ffffff08;
+}
+.qr-shell img {
+  width: 100%; aspect-ratio: 1; display: block; object-fit: contain;
+}
+.qr-caption {
+  text-align: center; color: var(--muted); font-size: 12px;
+  line-height: 1.7; margin: 18px 0 0;
+}
+.timer-wrap {
+  background: #09110d; border: 1px solid var(--border);
+  border-radius: 13px; padding: 13px; margin-top: 19px;
+  text-align: center;
+}
+.timer-label { color: var(--muted); font-size: 11px; }
+.timer { font-size: 25px; color: var(--green); font-weight: 800; margin-top: 5px; }
+.progress {
+  height: 4px; background: #25352e; border-radius: 5px;
+  overflow: hidden; margin-top: 12px;
+}
+.progress-bar {
+  height: 100%; width: 100%; background: var(--green);
+  transition: width 1s linear;
+}
+
+label { display: block; font-size: 12px; margin-bottom: 9px; font-weight: 600; }
+.input-wrap { position: relative; }
+input {
+  width: 100%; background: #080e0b; color: white;
+  border: 1px solid #304238; border-radius: 12px;
+  padding: 15px; font-size: 16px; outline: none;
+  transition: border .2s;
+}
+input:focus { border-color: var(--green); }
+input::placeholder { color: #617068; }
+.hint { font-size: 11px; color: var(--muted); line-height: 1.6; margin-top: 10px; }
+
+button {
+  width: 100%; padding: 16px; margin-top: 18px;
+  background: var(--green); color: #032117; border: 0;
+  border-radius: 13px; font-size: 14px; font-weight: 800;
+  cursor: pointer; transition: transform .2s, opacity .2s;
+}
+button:active { transform: scale(.98); }
+button:disabled { opacity: .55; cursor: not-allowed; }
+.error { color: #ff8585; font-size: 12px; margin-top: 12px; line-height: 1.6; }
+.hidden { display: none !important; }
+.footer { text-align: center; color: #718078; font-size: 10px; line-height: 1.7; margin: 20px 8px; }
+.footer span { color: var(--green); }
+
+.success-screen {
+  position: fixed; inset: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px; background: #050a07f5;
+  opacity: 0; visibility: hidden;
+  transition: opacity .35s, visibility .35s;
+}
+.success-screen.show { opacity: 1; visibility: visible; }
+.success-card {
+  width: 100%; max-width: 380px; padding: 28px 22px;
+  text-align: center; border: 1px solid #24523e;
+  border-radius: 25px; background: #101a14;
+  transform: translateY(18px) scale(.96);
+  transition: transform .4s;
+}
+.success-screen.show .success-card { transform: translateY(0) scale(1); }
+.check {
+  width: 82px; height: 82px; margin: 0 auto 20px;
+  border-radius: 50%; border: 2px solid var(--green);
+  color: var(--green); background: #00e59b14;
+  display: grid; place-items: center; font-size: 43px;
+  animation: pop .55s ease both;
+}
+@keyframes pop {
+  0% { transform: scale(.2); opacity: 0; }
+  75% { transform: scale(1.12); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.success-card h2 { font-size: 24px; }
+.success-card h2 span { color: var(--green); }
+.success-card > p { color: var(--muted); font-size: 12px; line-height: 1.7; margin-top: 10px; }
+.success-info {
+  margin-top: 20px; padding: 14px; border-radius: 13px;
+  background: #080e0b; text-align: left;
+}
+.confetti {
+  position: fixed; z-index: 20; top: -15px;
+  width: 8px; height: 12px; pointer-events: none;
+  animation: fall 2.8s linear forwards;
+}
+@keyframes fall {
+  to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+@media (max-width: 360px) {
+  .secure { font-size: 9px; padding: 7px; }
+  .brand h1 { font-size: 19px; }
+  .card { padding: 16px; }
+}
+</style>
+</head>
+
+<body>
+<main class="container">
+  <header class="header">
+    <div class="brand">
+      <div class="logo">R</div>
+      <div>
+        <h1>Ride<span>Fix</span></h1>
+        <p>Roadside assistance, simplified.</p>
+      </div>
+    </div>
+    <div class="secure">● SECURE CHECKOUT</div>
+  </header>
+
+  <div class="heading">
+    <h2>Complete Payment</h2>
+    <p>Scan the QR code and enter your transaction reference.</p>
+  </div>
+
+  <section class="card">
+    <div class="card-title"><span class="number">01</span> Payment Summary</div>
+    <div class="amount-label">Total Amount</div>
+    <div class="amount" id="amount">₹199.00</div>
+    <div class="row"><span class="label">Service</span><span class="value" id="service">Bike Service</span></div>
+    <div class="row"><span class="label">Customer</span><span class="value" id="customer">Customer</span></div>
+    <div class="row"><span class="label">Booking ID</span><span class="value" id="bookingId">RF-000001</span></div>
+  </section>
+
+  <section class="card">
+    <div class="card-title"><span class="number">02</span> Scan &amp; Pay</div>
+
+    <div class="qr-shell">
+      <!-- Replace with your actual payment QR image URL -->
+      <img id="qrImage"
+        src="https://placehold.co/400x400/ffffff/111111?text=YOUR+PAYMENT+QR"
+        alt="Payment QR Code">
+    </div>
+
+    <p class="qr-caption">
+      Open any UPI payment app and scan the QR code.<br>
+      Enter the exact amount shown above.
+    </p>
+
+    <div class="timer-wrap">
+      <div class="timer-label">PAYMENT SESSION EXPIRES IN</div>
+      <div class="timer" id="timer">05:00</div>
+      <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-title"><span class="number">03</span> Transaction Details</div>
+    <form id="paymentForm">
+      <label for="utr">UPI Transaction Reference / UTR</label>
+      <input id="utr" type="text" inputmode="numeric"
+        autocomplete="off" maxlength="12"
+        placeholder="Enter 12-digit UTR" required>
+      <p class="hint">Enter the transaction reference displayed by your payment app.</p>
+      <div id="error" class="error hidden"></div>
+      <button id="confirmBtn" type="submit">Confirm Payment →</button>
+    </form>
+  </section>
+
+  <p class="footer">
+    <span>RideFix</span> · Payment checkout<br>
+    Payment status is subject to transaction verification.
+  </p>
+</main>
+
+<section class="success-screen" id="successScreen" aria-live="polite">
+  <div class="success-card">
+    <div class="check">✓</div>
+    <h2>Payment <span>Successful!</span></h2>
+    <p>Your booking details have been submitted successfully.</p>
+
+    <div class="success-info">
+      <div class="row"><span class="label">Amount</span><span class="value" id="successAmount"></span></div>
+      <div class="row"><span class="label">Transaction ID</span><span class="value" id="successUtr"></span></div>
+      <div class="row"><span class="label">Booking ID</span><span class="value" id="successBookingId"></span></div>
+      <div class="row"><span class="label">Booking Status</span><span class="value" style="color:#00e59b">Pending</span></div>
+    </div>
+
+    <button id="doneBtn" type="button">Continue</button>
+  </div>
+</section>
+
+<script type="module">
+import { initializeApp } from
+  "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, serverTimestamp
+} from
+  "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// Firebase web configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDyAqz5_6-i7xIlPAdVCZwV262Prw",
+  authDomain: "ridefix-final.firebaseapp.com",
+  projectId: "ridefix-final",
+  storageBucket: "ridefix-final.firebasestorage.app",
+  messagingSenderId: "175554582400",
+  appId: "1:175554582400:web:f40c9b80354d6963ab1365",
+  measurementId: "G-EMCTJE6773"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const $ = id => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+
+function readBooking() {
+  for (const key of ["ridefixBooking", "bookingDetails", "currentBooking", "ridefix_booking"]) {
+    try {
+      const value = localStorage.getItem(key);
+      if (value) return JSON.parse(value);
+    } catch {}
+  }
+  return {};
+}
+
+const saved = readBooking();
+const rawAmount = Number(params.get("amount") ?? saved.amount ?? saved.price ?? 199);
+const amount = Number.isFinite(rawAmount) && rawAmount >= 0 ? rawAmount : 199;
+const service = params.get("service") ?? saved.service ?? saved.serviceName ?? "Bike Service";
+const customer = params.get("customer") ?? saved.customerName ?? saved.name ?? "Customer";
+const bookingId = params.get("bookingId") ?? saved.bookingId ?? saved.id ?? ("RF-" + Date.now().toString().slice(-8));
+
+$("amount").textContent = "₹" + amount.toFixed(2);
+$("service").textContent = service;
+$("customer").textContent = customer;
+$("bookingId").textContent = bookingId;
+
+// Optional QR URL: payment.html?qr=https%3A%2F%2Fexample.com%2Fqr.png
+const qr = params.get("qr");
+if (qr) {
+  try {
+    const u = new URL(qr);
+    if (["https:", "http:"].includes(u.protocol)) $("qrImage").src = u.href;
+  } catch {}
+}
+
+let seconds = 300;
+let expired = false;
+let submitting = false;
+let savedSuccessfully = false;
+
+function updateTimer() {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  $("timer").textContent = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  $("progressBar").style.width = (seconds / 300 * 100) + "%";
+}
+updateTimer();
+
+const clock = setInterval(() => {
+  if (seconds > 0) seconds--;
+  updateTimer();
+
+  if (seconds === 0) {
+    expired = true;
+    clearInterval(clock);
+    $("timer").textContent = "EXPIRED";
+    $("timer").style.color = "#ff7777";
+    $("confirmBtn").disabled = true;
+    showError("Payment session expired. Refresh the page to start again.");
+  }
+}, 1000);
+
+function showError(message) {
+  $("error").textContent = message;
+  $("error").classList.remove("hidden");
+}
+
+$("paymentForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  if (submitting || savedSuccessfully) return;
+
+  if (expired) {
+    showError("Payment session expired. Refresh the page to restart.");
+    return;
+  }
+
+  const utr = $("utr").value.trim();
+
+  // Sample UTR for the requested presentation flow.
+  // This is NOT real bank/payment verification.
+  if (utr !== "123456789012") {
+    showError("Please enter a valid transaction reference.");
+    return;
+  }
+
+  submitting = true;
+  $("confirmBtn").disabled = true;
+  $("confirmBtn").textContent = "Submitting...";
+
+  try {
+    const doc = await addDoc(collection(db, "bookings"), {
+      bookingId: String(bookingId),
+      service: String(service),
+      customerName: String(customer),
+      amount,
+      utr,
+      paymentMethod: "UPI",
+      paymentStatus: "pending",
+      status: "pending",
+      createdAt: serverTimestamp()
+    });
+
+    savedSuccessfully = true;
+    clearInterval(clock);
+
+    $("successAmount").textContent = "₹" + amount.toFixed(2);
+    $("successUtr").textContent = utr;
+    $("successBookingId").textContent = String(bookingId);
+
+    // Keep the saved Firestore document ID for support/admin reference.
+    localStorage.setItem("ridefixLastBookingDocumentId", doc.id);
+
+    $("successScreen").classList.add("show");
+    confetti();
+  } catch (err) {
+    console.error(err);
+    showError("Unable to submit booking. Check Firestore setup and security rules.");
+    submitting = false;
+    $("confirmBtn").disabled = false;
+    $("confirmBtn").textContent = "Confirm Payment →";
+  }
+});
+
+function confetti() {
+  const colors = ["#00e59b", "#ffffff", "#8bffd2", "#f8d36d"];
+  for (let i = 0; i < 55; i++) {
+    const piece = document.createElement("div");
+    piece.className = "confetti";
+    piece.style.left = Math.random() * 100 + "vw";
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDelay = Math.random() * 1.2 + "s";
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 4200);
+  }
+}
+
+$("doneBtn").addEventListener("click", () => {
+  location.href = "index.html"; // Replace with your booking status page.
+});
+</script>
+</body>
+</html>
